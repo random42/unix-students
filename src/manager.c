@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <stdio.h>
 #include "conf.h"
 
 uint SIM_TIME;

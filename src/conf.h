@@ -1,8 +1,7 @@
 #ifndef CONF_H
-
 #define CONF_H
-
-#define error(x) printf(x);exit(EXIT_FAILURE);
+#include <stdlib.h>
+#define ERROR(x) printf(x);exit(1);
 
 typedef unsigned int uint;
 typedef enum {FALSE,TRUE} bool;
@@ -12,6 +11,7 @@ typedef struct {
   double three;
   double four;
   uint nof_invites;
+  uint max_reject;
 } config;
 
 #endif

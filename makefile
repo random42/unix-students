@@ -3,7 +3,8 @@ INCLUDES = src/*.h
 COMMON_DEPS = $(INCLUDES) makefile opt.conf
 
 TEST = build/test.o \
-	build/list.o
+	build/list.o \
+	build/random.o
 
 all: dir test
 
@@ -15,3 +16,6 @@ build/%.o:	src/%.c $(COMMON_DEPS)
 
 dir:
 	mkdir -p bin build
+
+clean:
+	rm -rf bin build

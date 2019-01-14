@@ -13,7 +13,9 @@ typedef struct {
   struct group* group;
 } student;
 
-student* new_student(pid_t pid);
+
+student* new_student(int pid, FILE* random, config* conf);
 uint potential_vote(student* me, student* b);
+void print_student(void* obj);
 
 #endif

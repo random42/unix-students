@@ -4,7 +4,7 @@
 
 typedef struct {
   uint size;
-  student** students;
+  list* students;
   student* leader;
 } group;
 
