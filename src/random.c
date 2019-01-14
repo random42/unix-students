@@ -7,7 +7,7 @@ FILE* u_random;
 void random_init() {
   u_random = fopen("/dev/urandom", "r");
   if (!u_random) {
-    ERROR("Cannot open /dev/urandom");
+    ERROR("Cannot open /dev/urandom")
   }
 }
 

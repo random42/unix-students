@@ -2,12 +2,7 @@
 #include <stdio.h>
 #include "conf.h"
 
-
-uint nof_elems,
-nof_invites,
-max_reject,
-voto_AdE,
-voto;
+config conf;
 
 group g;
 
@@ -22,5 +17,4 @@ student* new_student(pid_t pid, FILE* random) {
 
 void print_student(void* obj) {
   student* s = (student*)obj;
-
 }

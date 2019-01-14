@@ -14,4 +14,6 @@ typedef struct {
   uint max_reject;
 } config;
 
+void config_init();
+
 #endif
