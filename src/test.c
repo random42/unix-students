@@ -15,7 +15,7 @@ void print_int(void* a) {
 }
 
 void test_conf() {
-  //ERROR("Test error!\n")
+  //ERROR("Test error!\n");
   config_init();
   printf("%lf, %lf, %lf, %d, %d\n", conf.two, conf.three, conf.four, conf.nof_invites, conf.max_reject);
 }

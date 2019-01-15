@@ -20,15 +20,19 @@ typedef struct {
   uint nof_elems;
   // RESPONSE
   bool response;
-  // VOTE and GROUP data (vote or student number)
-  uint data;
+  // VOTE
+  uint vote;
+  // GROUP
+  int student;
 } msg;
 
 void msg_init();
-void invite(int pid, uint voto_AdE, uint nof_elems);
-void respond(int pid, bool response);
-void send_vote(int pid, uint vote);
-void receive(msg* buffer, bool wait);
+void msg_invite(int pid, uint voto_AdE, uint nof_elems);
+void msg_respond(int pid, bool response);
+void msg_send_vote(student* s);
+void msg_receive(msg* buffer, bool wait);
+void msg_group(int student);
+void msg_close_group();
 void msg_close();
 
 #endif

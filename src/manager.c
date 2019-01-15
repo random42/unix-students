@@ -3,9 +3,10 @@
 #include "conf.h"
 
 uint SIM_TIME;
-
+uint POP_SIZE;
 
 
 int main(int argc, char* argv[]) {
-  SIM_TIME = strtoul(argv[1],NULL,10);
+  POP_SIZE = strtoul(argv[1], NULL, 10);
+  SIM_TIME = strtoul(argv[2], NULL, 10);
 }
