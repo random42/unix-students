@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <errno.h>
 #include "conf.h"
 
 FILE* u_random;
