@@ -1,20 +1,34 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "student.h"
 #include "conf.h"
+#include "random.h"
 
-config conf;
+extern config conf;
 
-group g;
+student self;
 
-student* new_student(pid_t pid, FILE* random) {
+student* new_student(int pid) {
   student* s = malloc(sizeof(student));
   s->pid = pid;
-  fread(&s->matricola, sizeof(uint), 1, source);
-  uint voto;
-  fread(&voto, sizeof(uint), 1, source);
-  s->voto_AdE = (voto % (30-18)) + 18;
+  s->voto_AdE = random_uint_range(18, 30);
+  s->nof_elems = random_nof_elems(&conf);
+  s->vote = 0;
+  s->group = NULL;
+  return s;
+}
+
+uint potential_vote(student* a, student* b) {
+  uint vote = a->voto_AdE;
+  if (b->voto_AdE > vote)
+    vote = b->voto_AdE;
+  if (a->nof_elems != b->nof_elems)
+    vote -= 3;
+  return vote;
 }
 
 void print_student(void* obj) {
   student* s = (student*)obj;
+  char* sep = "\n   ";
+  printf("{%spid: %d,%svoto_AdE: %u,%snof_elems: %u,%svote: %u,%sgroup: %p\n}\n", sep, s->pid, sep, s->voto_AdE, sep, s->nof_elems, sep, s->vote, sep, s->group);
 }

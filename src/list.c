@@ -82,7 +82,7 @@ void print_list(list* l, void (*f)(void*)) {
       printf("%s", sep);
     n = n->next;
   }
-  printf("]\n");
+  printf("]");
 }
 
 void for_each(list* l, void (*f)(void*)) {

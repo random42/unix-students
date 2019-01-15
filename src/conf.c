@@ -9,6 +9,6 @@ void config_init() {
   if (!opt) {
     ERROR("Cannot read from opt.conf file.")
   }
-  fscanf(opt, "%*d %lf %*d %lf %*d %lf %*s %d %*s %d", &conf.two, &conf.three, &conf.four, &conf.nof_invites, &conf.max_reject);
+  fscanf(opt, "%*s %lf %*s %lf %*s %lf %*s %d %*s %d", &conf.two, &conf.three, &conf.four, &conf.nof_invites, &conf.max_reject);
   fclose(opt);
 }

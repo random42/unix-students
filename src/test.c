@@ -4,10 +4,13 @@
 #include "conf.h"
 #include "list.h"
 #include "random.h"
+#include "student.h"
+#include "group.h"
+
 
 extern config conf;
 
-void print(void* a) {
+void print_int(void* a) {
   printf("%d", *(int*)a);
 }
 
@@ -30,7 +33,7 @@ void test_list() {
   assert(list_contains(l, &c));
   list_remove(l, &b);
   assert(!list_contains(l, &b));
-  //print_list(l, print);
+  //print_list(l, print_int);
 }
 
 void test_random() {
@@ -61,8 +64,29 @@ void test_random() {
   printf("4 prob: %lf, test: %lf\n", conf.four, (double)four / total);
 }
 
+void test_student() {
+  student* s = new_student(12);
+  student* s1 = new_student(13);
+  student* s2 = new_student(14);
+  printf("\nPrinting students\n");
+  print_student(s);
+  print_student(s1);
+  print_student(s2);
+  printf("\nPotential vote of 12 if in 13's group: %u\n",potential_vote(s,s1));
+  group* g = new_group();
+  add_student(g, s);
+  add_student(g, s1);
+  print_group(g);
+  add_student(g, s2);
+  g->leader = s2;
+  print_group(g);
+  set_votes(g);
+  printf("\nFinal votes: %u, %u, %u\n", s->vote, s1->vote, s2->vote);
+}
+
 int main() {
   test_conf();
   test_list();
   test_random();
+  test_student();
 }

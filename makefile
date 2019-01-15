@@ -5,7 +5,9 @@ COMMON_DEPS = $(INCLUDES) makefile opt.conf
 TEST = build/test.o \
 	build/list.o \
 	build/random.o \
-	build/conf.o
+	build/conf.o \
+	build/student.o \
+	build/group.o
 
 all: dir test
 
