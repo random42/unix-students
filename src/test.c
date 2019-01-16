@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <errno.h>
 #include "conf.h"
 #include "list.h"
 #include "random.h"
@@ -71,7 +72,6 @@ void test_student() {
   print_student(s);
   print_student(s1);
   print_student(s2);
-  printf("\nPotential vote of 12 if in 13's group: %u\n",potential_vote(s,s1));
   group* g = new_group();
   add_student(g, s);
   add_student(g, s1);
@@ -79,8 +79,12 @@ void test_student() {
   add_student(g, s2);
   g->leader = s2;
   print_group(g);
-  set_votes(g);
-  printf("\nFinal votes: %u, %u, %u\n", s->vote, s1->vote, s2->vote);
+  printf("\nVotes: %u, %u, %u\n", s->vote, s1->vote, s2->vote);
+  g->closed = TRUE;
+  set_vote(s);
+  set_vote(s1);
+  set_vote(s2);
+  printf("\nClosed group votes: %u, %u, %u\n", s->vote, s1->vote, s2->vote);
 }
 
 int main() {

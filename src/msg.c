@@ -34,7 +34,7 @@ void msg_respond(int pid, bool response) {
   msg m;
   m.mtype = pid;
   m.from = getpid();
-  m.type = RESPOND;
+  m.type = RESPONSE;
   m.response = response;
   msgsnd(msg_id, &m, msg_size, 0);
 }

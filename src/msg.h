@@ -5,6 +5,7 @@
 #define MSG_LENGTH
 
 #include "conf.h"
+#include "student.h"
 
 typedef enum {INVITE,RESPONSE,VOTE,GROUP,CLOSE_GROUP} msg_t;
 

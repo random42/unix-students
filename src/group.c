@@ -10,12 +10,17 @@ group* new_group() {
   group* g = malloc(sizeof(group));
   g->students = new_list();
   g->leader = NULL;
+  g->closed = FALSE;
+  g->max_vote = 0;
   return g;
 }
 
 void add_student(group* g, student* s) {
+  s->group = g;
   list_add(g->students, s);
   g->size++;
+  if (s->voto_AdE > g->max_vote)
+    g->max_vote = s->voto_AdE;
 }
 
 void print_student_num(void* obj) {
@@ -33,27 +38,7 @@ void print_group(void* obj) {
   print_list(g->students, print_student_num);
   printf(",%sleader: ", sep);
   print_student_num(g->leader);
+  printf(",%sclosed: %s,%s", sep, g->closed ? "TRUE" : "FALSE",sep);
+  printf("max_vote: %d", g->max_vote);
   printf("\n}");
-}
-
-void set_votes(group* g) {
-  if (!g->size || !g->leader)
-    return;
-  int max_vote = 0;
-  node* n = g->students->first;
-  while (n) {
-    student* s = (student*)n->elem;
-    if (max_vote < s->voto_AdE)
-      max_vote = s->voto_AdE;
-    n = n->next;
-  }
-  n = g->students->first;
-  while (n) {
-    student* s = (student*)n->elem;
-    if (s->nof_elems == g->size)
-      s->vote = max_vote;
-    else
-      s->vote = max_vote - 3;
-    n = n->next;
-  }
 }

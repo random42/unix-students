@@ -15,7 +15,7 @@ typedef struct {
 
 
 student* new_student(int pid);
-int potential_vote(student* a, student* b);
+int set_vote(student* s);
 void print_student(void* obj);
 
 #endif

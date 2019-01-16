@@ -4,6 +4,7 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <errno.h>
+#include "conf.h"
 
 int sem_get(int key) {
   int id = semget(key, 0, 0);
@@ -28,7 +29,7 @@ void sem_delete(int sem_id) {
   }
 }
 
-int sem_op(int sem_id, short sem_num, short op, bool wait) {
+int sem_op(int sem_id, short sem_num, short op, int wait) {
   struct sembuf s;
   s.sem_num = sem_num;
   s.sem_op = op;
@@ -37,7 +38,7 @@ int sem_op(int sem_id, short sem_num, short op, bool wait) {
 }
 
 void sem_set(int sem_id, short sem_num, short val) {
-  int r = semctl(id, sem_num, SETVAL, val);
+  int r = semctl(sem_id, sem_num, SETVAL, val);
   if (r == -1) {
     ERROR("sem_set_val\n");
   }

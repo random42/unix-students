@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#include "student.h"
 #include "conf.h"
+#include "student.h"
+#include "group.h"
 #include "random.h"
 
 extern config conf;
@@ -19,13 +20,14 @@ student* new_student(int pid) {
   return s;
 }
 
-int potential_vote(student* a, student* b) {
-  int vote = a->voto_AdE;
-  if (b->voto_AdE > vote)
-    vote = b->voto_AdE;
-  if (a->nof_elems != b->nof_elems)
-    vote -= 3;
-  return vote;
+int set_vote(student* s) {
+  if (!s->group || !s->group->closed)
+    s->vote = 0;
+  else if (s->group->size == s->nof_elems)
+    s->vote = s->group->max_vote;
+  else
+    s->vote = s->group->max_vote - 3;
+  return s->vote;
 }
 
 void print_student(void* obj) {

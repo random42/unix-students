@@ -2,12 +2,15 @@
 
 #define GROUP_H
 #include "conf.h"
+#include "list.h"
 #include "student.h"
 
 typedef struct group_t {
   int size;
   list* students;
   student* leader;
+  bool closed;
+  int max_vote;
 } group;
 
 group* new_group();

@@ -12,22 +12,42 @@
 #define WRITE 1 // 0 if writing, 1 otherwise
 #define WRITE_WAIT 2 // number of writers waiting
 
+void* shm_ptr;
 int shm_id;
 int sem_id;
 
 // used by manager
-void* shm_create(int size) {
+void* shm_create(int students) {
+  int size = sizeof(int) + (sizeof(shm_student) * students);
   shm_id = shmget(SHM_KEY, size, 0600 | IPC_CREAT);
   if (shm_id == -1) {
     ERROR("shmget\n");
   }
-  void* p = shmat(shm_id, NULL, 0);
-  if (p == (void*)-1) {
+  shm_ptr = shmat(shm_id, NULL, 0);
+  if (shm_ptr == (void*)-1) {
     ERROR("shmat\n");
   }
   sem_id = sem_create(SHM_SEM_KEY,3);
   sem_set(sem_id, WRITE, 1);
-  return p;
+  return shm_ptr;
+}
+
+void write_students(list* students) {
+  shm_write();
+  int* length = (int*)shm_ptr;
+  *length = students->length;
+  node* n = students->first;
+  shm_student* arr = (shm_student*)(shm_ptr + sizeof(int));
+  for (int i = 0; i < students->length; i++) {
+    student* s = (student*)n->elem;
+    shm_student* x = &arr[i];
+    x->pid = s->pid;
+    x->voto_AdE = s->voto_AdE;
+    x->nof_elems = s->nof_elems;
+    x->in_closed_group = FALSE;
+    n = n->next;
+  }
+  shm_stop_write();
 }
 
 // used by students, so read-only permission is set
