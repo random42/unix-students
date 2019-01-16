@@ -3,8 +3,8 @@
 #include <errno.h>
 #include "conf.h"
 
-uint SIM_TIME;
-uint POP_SIZE;
+int SIM_TIME;
+int POP_SIZE;
 
 
 int main(int argc, char* argv[]) {

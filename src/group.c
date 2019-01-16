@@ -39,7 +39,7 @@ void print_group(void* obj) {
 void set_votes(group* g) {
   if (!g->size || !g->leader)
     return;
-  uint max_vote = 0;
+  int max_vote = 0;
   node* n = g->students->first;
   while (n) {
     student* s = (student*)n->elem;

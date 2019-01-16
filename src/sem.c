@@ -36,7 +36,7 @@ int sem_op(int sem_id, short sem_num, short op, bool wait) {
   return semop(sem_id, &s, 1);
 }
 
-void sem_set_val(int sem_id, short sem_num, short val) {
+void sem_set(int sem_id, short sem_num, short val) {
   int r = semctl(id, sem_num, SETVAL, val);
   if (r == -1) {
     ERROR("sem_set_val\n");

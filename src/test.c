@@ -39,21 +39,20 @@ void test_list() {
 void test_random() {
   random_init();
   int tests = 1000;
-  uint two = 0, three = 0, four = 0;
-  uint total;
+  int two = 0, three = 0, four = 0;
+  int total;
   for (int i = 0; i < tests; i++) {
-    uint r = random_uint();
-    assert(r >= 0);
+    int r = random_int();
     //printf("%u, ",r);
-    uint from = 123;
-    uint to = 876;
-    uint range = random_uint_range(from, to);
+    int from = -1000;
+    int to = 1000;
+    int range = random_int_range(from, to);
     //printf("%u, ",range);
     assert(range >= from && range <= to);
     double prob = random_zero_to_one();
     //printf("%lf\n", prob);
     assert(prob >= 0 && prob <= 1);
-    uint nof_elems = random_nof_elems(&conf);
+    int nof_elems = random_nof_elems(&conf);
     if (nof_elems == 2) two++;
     else if (nof_elems == 3) three++;
     else four++;

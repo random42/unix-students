@@ -7,15 +7,15 @@ struct group_t;
 
 typedef struct {
   int pid; // also defines student number
-  uint voto_AdE;
-  uint nof_elems;
-  uint vote;
+  int voto_AdE;
+  int nof_elems;
+  int vote;
   struct group_t* group;
 } student;
 
 
 student* new_student(int pid);
-uint potential_vote(student* a, student* b);
+int potential_vote(student* a, student* b);
 void print_student(void* obj);
 
 #endif

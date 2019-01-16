@@ -5,7 +5,7 @@
 #include "student.h"
 
 typedef struct group_t {
-  uint size;
+  int size;
   list* students;
   student* leader;
 } group;

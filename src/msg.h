@@ -16,18 +16,18 @@ typedef struct {
   // msg type
   msg_t type;
   // INVITE data
-  uint voto_AdE;
-  uint nof_elems;
+  int voto_AdE;
+  int nof_elems;
   // RESPONSE
   bool response;
   // VOTE
-  uint vote;
+  int vote;
   // GROUP
   int student;
 } msg;
 
 void msg_init();
-void msg_invite(int pid, uint voto_AdE, uint nof_elems);
+void msg_invite(int pid, int voto_AdE, int nof_elems);
 void msg_respond(int pid, bool response);
 void msg_send_vote(student* s);
 void msg_receive(msg* buffer, bool wait);

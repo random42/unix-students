@@ -12,15 +12,15 @@ student self;
 student* new_student(int pid) {
   student* s = malloc(sizeof(student));
   s->pid = pid;
-  s->voto_AdE = random_uint_range(18, 30);
+  s->voto_AdE = random_int_range(18, 30);
   s->nof_elems = random_nof_elems(&conf);
   s->vote = 0;
   s->group = NULL;
   return s;
 }
 
-uint potential_vote(student* a, student* b) {
-  uint vote = a->voto_AdE;
+int potential_vote(student* a, student* b) {
+  int vote = a->voto_AdE;
   if (b->voto_AdE > vote)
     vote = b->voto_AdE;
   if (a->nof_elems != b->nof_elems)

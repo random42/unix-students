@@ -3,9 +3,9 @@
 #include "conf.h"
 
 void random_init();
-uint random_uint();
-uint random_uint_range(uint from, uint to);
+int random_int();
+int random_int_range(int from, int to);
 double random_zero_to_one();
-uint random_nof_elems(config* conf);
+int random_nof_elems(config* conf);
 
 #endif

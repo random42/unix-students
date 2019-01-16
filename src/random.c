@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #include "conf.h"
@@ -12,28 +13,28 @@ void random_init() {
   }
 }
 
-uint random_uint() {
-  uint r;
-  fread(&r, sizeof(uint), 1, u_random);
+int random_int() {
+  int r;
+  fread(&r, sizeof(int), 1, u_random);
   return r;
 }
 
-uint random_uint_range(uint from, uint to) {
-  uint r = random_uint();
-  return r % (to - from + 1) + from;
+int random_int_range(int from, int to) {
+  int r = random_int();
+  int m = r % (to - from + 1);
+  return abs(m) + from;
 }
 
 double random_zero_to_one() {
-  uint precision = 100000;
-  uint r = random_uint_range(1, precision);
+  int precision = 100000;
+  int r = random_int_range(0, precision);
   return (double)r / precision;
 }
 
-uint random_nof_elems(config* conf) {
+int random_nof_elems(config* conf) {
   double r = random_zero_to_one();
   double two = conf->two;
   double three = two + conf->three;
-  double four = 1;
   if (r <= two)
     return 2;
   else if (r <= three)

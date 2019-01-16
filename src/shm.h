@@ -1,15 +1,18 @@
 #ifndef SHM_H
 
 #define SHM_H
-#define SHM_KEY 1234
-#define SHM_SEM_KEY 1253
-#include "conf.h"
 
 typedef struct {
   int pid;
-  uint voto_AdE;
-  uint nof_elems;
+  int voto_AdE;
+  int nof_elems;
   bool in_closed_group;
 } shm_student;
 
-void shm_init();
+void* shm_create(int size);
+void* shm_get();
+void shm_read();
+void shm_stop_read();
+void shm_write();
+void shm_stop_write();
+void shm_delete();

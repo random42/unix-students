@@ -20,7 +20,7 @@ void msg_init() {
   }
 }
 
-void msg_invite(int pid, uint voto_AdE, uint nof_elems) {
+void msg_invite(int pid, int voto_AdE, int nof_elems) {
   msg m;
   m.mtype = pid;
   m.from = getpid();
