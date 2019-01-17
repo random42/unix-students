@@ -6,6 +6,8 @@
 #include "conf.h"
 #include "shm.h"
 #include "sem.h"
+#include "list.h"
+#include "student.h"
 #define SHM_KEY 1234
 #define SHM_SEM_KEY 1253
 #define READ 0 // num of readers
@@ -27,7 +29,7 @@ void* shm_create(int students) {
   if (shm_ptr == (void*)-1) {
     ERROR("shmat\n");
   }
-  sem_id = sem_create(SHM_SEM_KEY,3);
+  sem_id = sem_create(SHM_SEM_KEY, 3);
   sem_set(sem_id, WRITE, 1);
   return shm_ptr;
 }
@@ -95,7 +97,7 @@ void shm_stop_write() {
 
 void shm_delete() {
   if (shmctl(shm_id, IPC_RMID, NULL) == -1) {
-    ERROR("shmctl\n");
+    debug("shmctl");
   }
   sem_delete(sem_id);
 }

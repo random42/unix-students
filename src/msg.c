@@ -71,5 +71,8 @@ void msg_close_group() {
 }
 
 void msg_close() {
-  msgctl(msg_id, IPC_RMID, NULL);
+  int r = msgctl(msg_id, IPC_RMID, NULL);
+  if (r == -1) {
+    debug("msgctl");
+  }
 }

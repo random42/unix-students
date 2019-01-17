@@ -65,9 +65,12 @@ void test_random() {
 }
 
 void test_student() {
-  student* s = new_student(12);
-  student* s1 = new_student(13);
-  student* s2 = new_student(14);
+  student* s = new_student();
+  student* s1 = new_student();
+  student* s2 = new_student();
+  s->pid = 1;
+  s1->pid = 2;
+  s2->pid = 3;
   printf("\nPrinting students\n");
   print_student(s);
   print_student(s1);

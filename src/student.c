@@ -8,11 +8,9 @@
 
 extern config conf;
 
-student self;
-
-student* new_student(int pid) {
+student* new_student() {
   student* s = malloc(sizeof(student));
-  s->pid = pid;
+  s->pid = 0;
   s->voto_AdE = random_int_range(18, 30);
   s->nof_elems = random_nof_elems(&conf);
   s->vote = 0;

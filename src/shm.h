@@ -2,6 +2,8 @@
 
 #define SHM_H
 
+#include "list.h"
+
 typedef struct {
   int pid;
   int voto_AdE;

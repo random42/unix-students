@@ -4,6 +4,8 @@
 #include <string.h>
 #define ERROR(x); printf(x);printf("%s\n",strerror(errno));exit(1);
 #define START_SEM_KEY 42435 // start sem
+#define DEBUG 1
+#define debug(x); if (DEBUG) printf("%s\n",x);
 
 typedef enum {FALSE,TRUE} bool;
 

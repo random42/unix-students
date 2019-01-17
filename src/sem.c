@@ -15,7 +15,7 @@ int sem_get(int key) {
 }
 
 int sem_create(int key, int n_sems) {
-  int id = semget(key, n_sems, IPC_CREAT);
+  int id = semget(key, n_sems, 0600 | IPC_CREAT);
   if (id == -1) {
     ERROR("sem_create\n");
   }
@@ -25,11 +25,11 @@ int sem_create(int key, int n_sems) {
 void sem_delete(int sem_id) {
   int r = semctl(sem_id, 0, IPC_RMID);
   if (r == -1) {
-    ERROR("sem_delete\n");
+    debug("sem_delete");
   }
 }
 
-int sem_op(int sem_id, short sem_num, short op, int wait) {
+int sem_op(int sem_id, int sem_num, short op, int wait) {
   struct sembuf s;
   s.sem_num = sem_num;
   s.sem_op = op;
@@ -37,9 +37,9 @@ int sem_op(int sem_id, short sem_num, short op, int wait) {
   return semop(sem_id, &s, 1);
 }
 
-void sem_set(int sem_id, short sem_num, short val) {
+void sem_set(int sem_id, int sem_num, int val) {
   int r = semctl(sem_id, sem_num, SETVAL, val);
   if (r == -1) {
-    ERROR("sem_set_val\n");
+    ERROR("sem_set\n");
   }
 }
