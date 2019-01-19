@@ -2,20 +2,13 @@
 #define CONF_H
 #include <stdlib.h>
 #include <string.h>
-#define ERROR(x); printf(x);printf("%s\n",strerror(errno));exit(1);
+#include <signal.h>
+#define ERROR(x); printf(x);printf("%s\n",strerror(errno));exit(EXIT_FAILURE);
 #define START_SEM_KEY 42435 // start sem
 #define DEBUG 1
 #define debug(x); if (DEBUG) printf("%s\n",x);
 
 typedef enum {FALSE,TRUE} bool;
-
-typedef struct {
-  double two;
-  double three;
-  double four;
-  int nof_invites;
-  int max_reject;
-} config;
 
 void config_init();
 

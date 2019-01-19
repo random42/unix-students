@@ -8,8 +8,13 @@
 #include "student.h"
 #include "group.h"
 
-
-extern config conf;
+extern double TWO;
+extern double THREE;
+extern double FOUR;
+extern int NOF_INVITES;
+extern int MAX_REJECT;
+extern int POP_SIZE;
+extern int SIM_TIME;
 
 void print_int(void* a) {
   printf("%d", *(int*)a);
@@ -18,7 +23,7 @@ void print_int(void* a) {
 void test_conf() {
   //ERROR("Test error!\n");
   config_init();
-  printf("%lf, %lf, %lf, %d, %d\n", conf.two, conf.three, conf.four, conf.nof_invites, conf.max_reject);
+  printf("Config:\n%lf, %lf, %lf, %d, %d, %d, %d\n", TWO, THREE, FOUR, NOF_INVITES, MAX_REJECT, POP_SIZE, SIM_TIME);
 }
 
 void test_list() {
@@ -53,15 +58,15 @@ void test_random() {
     double prob = random_zero_to_one();
     //printf("%lf\n", prob);
     assert(prob >= 0 && prob <= 1);
-    int nof_elems = random_nof_elems(&conf);
+    int nof_elems = random_nof_elems(TWO, THREE, FOUR);
     if (nof_elems == 2) two++;
     else if (nof_elems == 3) three++;
     else four++;
   }
   total = two + three + four;
-  printf("2 prob: %lf, test: %lf\n", conf.two, (double)two / total);
-  printf("3 prob: %lf, test: %lf\n", conf.three, (double)three / total);
-  printf("4 prob: %lf, test: %lf\n", conf.four, (double)four / total);
+  printf("2 prob: %lf, test: %lf\n", TWO, (double)two / total);
+  printf("3 prob: %lf, test: %lf\n", THREE, (double)three / total);
+  printf("4 prob: %lf, test: %lf\n", FOUR, (double)four / total);
 }
 
 void test_student() {

@@ -3,13 +3,19 @@
 #include <errno.h>
 #include "conf.h"
 
-config conf;
+double TWO;
+double THREE;
+double FOUR;
+int NOF_INVITES;
+int MAX_REJECT;
+int POP_SIZE;
+int SIM_TIME;
 
 void config_init() {
   FILE* opt = fopen("opt.conf","r");
   if (!opt) {
     ERROR("Cannot read from opt.conf file.");
   }
-  fscanf(opt, "%*s %lf %*s %lf %*s %lf %*s %d %*s %d", &conf.two, &conf.three, &conf.four, &conf.nof_invites, &conf.max_reject);
+  fscanf(opt, "%*s %lf %*s %lf %*s %lf %*s %d %*s %d %*s %d %*s %d", &TWO, &THREE, &FOUR, &NOF_INVITES, &MAX_REJECT, &POP_SIZE, &SIM_TIME);
   fclose(opt);
 }

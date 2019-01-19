@@ -26,7 +26,8 @@ void end() {
 }
 
 int main(int argc, char* argv[]) {
+  self.pid = getpid();
   self.voto_AdE = strtoul(argv[1], NULL, 10);
   self.nof_elems = strtoul(argv[2], NULL, 10);
-  print_student(&self);
+  printf("pid: %d\n", getpid());
 }

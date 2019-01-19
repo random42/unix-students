@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#include "conf.h"
+#include "random.h"
 
 FILE* u_random;
 
@@ -31,10 +31,9 @@ double random_zero_to_one() {
   return (double)r / precision;
 }
 
-int random_nof_elems(config* conf) {
+int random_nof_elems(double two, double three, double four) {
   double r = random_zero_to_one();
-  double two = conf->two;
-  double three = two + conf->three;
+  three = two + three;
   if (r <= two)
     return 2;
   else if (r <= three)

@@ -6,13 +6,15 @@
 #include "group.h"
 #include "random.h"
 
-extern config conf;
+extern int TWO;
+extern int THREE;
+extern int FOUR;
 
 student* new_student() {
   student* s = malloc(sizeof(student));
   s->pid = 0;
   s->voto_AdE = random_int_range(18, 30);
-  s->nof_elems = random_nof_elems(&conf);
+  s->nof_elems = random_nof_elems(TWO, THREE, FOUR);
   s->vote = 0;
   s->group = NULL;
   return s;
