@@ -34,7 +34,7 @@ void* shm_create(int students) {
   return shm_ptr;
 }
 
-void write_students(list* students) {
+void shm_write_students(list* students) {
   shm_write();
   int* length = (int*)shm_ptr;
   *length = students->length;

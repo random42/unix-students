@@ -12,8 +12,15 @@
 int msg_id;
 int msg_size;
 
+void msg_send(msg* m, int flag) {
+  int r = msgsnd(msg_id, &m, msg_size, flag);
+  if (r == -1) {
+    ERROR("msgsnd\n");
+  }
+}
+
 void msg_init() {
-  msg_id = msgget(MSG_KEY, IPC_CREAT);
+  msg_id = msgget(MSG_KEY, IPC_CREAT | 0600);
   msg_size = sizeof(msg) - sizeof(long);
   if (msg_id == -1) {
     ERROR("Cannot create message queue.");
@@ -27,7 +34,7 @@ void msg_invite(int pid, int voto_AdE, int nof_elems) {
   m.type = INVITE;
   m.voto_AdE = voto_AdE;
   m.nof_elems = nof_elems;
-  msgsnd(msg_id, &m, msg_size, 0);
+  msg_send(&m, msg_size);
 }
 
 void msg_respond(int pid, bool response) {
@@ -36,7 +43,7 @@ void msg_respond(int pid, bool response) {
   m.from = getpid();
   m.type = RESPONSE;
   m.response = response;
-  msgsnd(msg_id, &m, msg_size, 0);
+  msg_send(&m, 0);
 }
 
 void msg_send_vote(student* s) {
@@ -45,12 +52,15 @@ void msg_send_vote(student* s) {
   m.from = getpid();
   m.type = VOTE;
   m.vote = s->vote;
-  msgsnd(msg_id, &m, msg_size, 0);
+  msg_send(&m, 0);
 }
 
 void msg_receive(msg* buffer, bool wait) {
   int flag = wait ? 0 : IPC_NOWAIT;
-  msgrcv(msg_id, buffer, msg_size, getpid(), flag);
+  int r = msgrcv(msg_id, buffer, msg_size, getpid(), flag);
+  if (r == -1) {
+    ERROR("msgrcv\n");
+  }
 }
 
 void msg_group(int student) {
@@ -59,7 +69,7 @@ void msg_group(int student) {
   m.from = getpid();
   m.type = GROUP;
   m.student = student;
-  msgsnd(msg_id, &m, msg_size, 0);
+  msg_send(&m, 0);
 }
 
 void msg_close_group() {
@@ -67,7 +77,7 @@ void msg_close_group() {
   m.mtype = getppid();
   m.from = getpid();
   m.type = CLOSE_GROUP;
-  msgsnd(msg_id, &m, msg_size, 0);
+  msg_send(&m, 0);
 }
 
 void msg_close() {

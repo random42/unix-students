@@ -35,10 +35,11 @@ void start() {
   gettimeofday(&start_time, NULL);
   setitimer(ITIMER_REAL, &timer, NULL);
   for_each(students, spawn_student);
+  // write students to shared memory
+  shm_write_students(students);
   // decrements the semaphore to let children start
-  sem_op(start_sem_id, 0, -1, FALSE);
+  sem_op(start_sem_id, 0, -POP_SIZE, TRUE);
   wait_for_messages();
-  sleep(10);
 }
 
 // initialize data structures
@@ -47,7 +48,7 @@ void init() {
   config_init();
   // initialize random library
   random_init();
-  // ipc_init();
+  ipc_init();
   // get current directory
   char* dir = getenv("PWD");
   // create students
@@ -62,6 +63,21 @@ void init() {
   // set timer function
   set_signal_handler(SIGALRM, end, TRUE);
   set_signal_handler(SIGINT, end, TRUE);
+  set_signal_handler(SIGTERM, end, TRUE);
+}
+
+student* get_student(int pid) {
+  node* n = students->first;
+  bool found = FALSE;
+  student* s;
+  while (n && !found) {
+    s = n->elem;
+    if (s && s->pid == pid) {
+      found = TRUE;
+    }
+    n = n->next;
+  }
+  return s;
 }
 
 // set function to handle signals
@@ -88,7 +104,6 @@ list* create_students(int num) {
 }
 
 void spawn_student(student* s) {
-  debug("spawn_student");
   char* voto = malloc(3);
   char* nof_elems = malloc(2);
   sprintf(voto, "%d", s->voto_AdE);
@@ -111,32 +126,76 @@ void spawn_student(student* s) {
 }
 
 void wait_for_messages() {
-  debug("wait_for_messages");
-}
-
-void on_msg(msg* m) {
-
+  msg* m = malloc(sizeof(msg));
+  while (1) {
+    msg_receive(m, TRUE);
+    switch(m->type) {
+      case GROUP: {
+        on_group(m);
+        break;
+      }
+      case CLOSE_GROUP: {
+        on_close_group(m);
+        break;
+      }
+      default: {
+        ERROR("MANAGER: Wrong message type.\n");
+      }
+    }
+  }
 }
 
 void on_group(msg* m) {
-
+  debug("GROUP");
+  student* leader = get_student(m->from);
+  student* new = get_student(m->student);
+  group* g;
+  if (leader->group) {
+    g = leader->group;
+    if (g->leader != leader) {
+      ERROR("Sender is not the group leader. GROUP\n");
+    }
+    if (g->closed) {
+      ERROR("Group is already closed. GROUP\n");
+    }
+  }
+  else {
+    g = new_group();
+    add_student(g, leader);
+    g->leader = leader;
+    list_add(groups, g);
+  }
+  add_student(g, new);
 }
 
 void on_close_group(msg* m) {
+  debug("CLOSE_GROUP");
+  student* leader = get_student(m->from);
+  group* g = leader->group;
+  // if student is not in any group
+  if (!g) {
+    g = new_group();
+    add_student(g, leader);
+    g->leader = leader;
 
-}
-
-void on_sim_time(int sig) {
-
+  }
+  else if (g->leader != leader) {
+    ERROR("Sender is not the group leader. CLOSE_GROUP\n");
+  }
+  if (g->closed) {
+    ERROR("Group is already closed. CLOSE_GROUP\n");
+  }
+  g->closed = TRUE;
+  list_add(closed_groups, g);
 }
 
 void end(int signal) {
+  debug("END\n");
   print_infos();
   wait_for_children();
   ipc_close();
   exit(EXIT_SUCCESS);
 }
-
 
 void set_votes() {
 
@@ -145,7 +204,6 @@ void set_votes() {
 // initialize ipc structures
 void ipc_init() {
   start_sem_id = sem_create(START_SEM_KEY, 1);
-  sem_set(start_sem_id, 0, POP_SIZE + 1);
   shm_create(POP_SIZE);
   msg_init();
 }
@@ -168,7 +226,7 @@ double elapsed_time(struct timeval* from) {
 }
 
 void print_infos() {
-  printf("Tempo trascorso: %lf\n", elapsed_time(&start_time));
+  printf("\nTempo trascorso: %lf\n", elapsed_time(&start_time));
   printf("Studenti: %d\n", students->length);
   printf("Gruppi: %d\n", groups->length);
   printf("Gruppi chiusi: %d\n", closed_groups->length);

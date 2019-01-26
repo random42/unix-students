@@ -12,7 +12,7 @@ typedef struct {
 } shm_student;
 
 void* shm_create(int students);
-void write_students(list* students);
+void shm_write_students(list* students);
 void* shm_get();
 void shm_read();
 void shm_stop_read();
