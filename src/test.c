@@ -7,6 +7,7 @@
 #include "random.h"
 #include "student.h"
 #include "group.h"
+#include "shm.h"
 
 extern double TWO;
 extern double THREE;
@@ -81,10 +82,10 @@ void test_student() {
   print_student(s1);
   print_student(s2);
   group* g = new_group();
-  add_student(g, s);
-  add_student(g, s1);
+  group_add_student(g, s);
+  group_add_student(g, s1);
   print_group(g);
-  add_student(g, s2);
+  group_add_student(g, s2);
   g->leader = s2;
   print_group(g);
   printf("\nVotes: %u, %u, %u\n", s->vote, s1->vote, s2->vote);
@@ -95,9 +96,36 @@ void test_student() {
   printf("\nClosed group votes: %u, %u, %u\n", s->vote, s1->vote, s2->vote);
 }
 
+void test_shm() {
+  printf("\nSHARED MEMORY TEST\n");
+  student* s = new_student();
+  student* s1 = new_student();
+  student* s2 = new_student();
+  s->pid = 1;
+  s1->pid = 2;
+  s2->pid = 3;
+  list* l = new_list();
+  list_add(l, s);
+  list_add(l, s1);
+  list_add(l, s2);
+  shm_create(l->length);
+  shm_write_students(l);
+  printf("3 students have been written\n\n");
+  shm_print();
+  int pids[3];
+  pids[0] = 1;
+  pids[1] = 3;
+  shm_close_group(pids, 2);
+  printf("First and third students closed groups\n\n");
+  shm_print();
+  shm_delete();
+}
+
 int main() {
+  //atexit(shm_delete);
   test_conf();
   test_list();
   test_random();
   test_student();
+  test_shm();
 }

@@ -15,7 +15,7 @@ group* new_group() {
   return g;
 }
 
-void add_student(group* g, student* s) {
+void group_add_student(group* g, student* s) {
   s->group = g;
   list_add(g->students, s);
   g->size++;

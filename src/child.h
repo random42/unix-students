@@ -3,9 +3,10 @@
 #define CHILD_H
 
 void init();
-void end();
+void start();
+void end(int signal);
 void ipc_init();
-void ipc_close();
+
 
 
 #endif

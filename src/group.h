@@ -14,7 +14,7 @@ typedef struct group_t {
 } group;
 
 group* new_group();
-void add_student(group* g, student* s);
+void group_add_student(group* g, student* s);
 void print_student_num(void* obj);
 void print_group(void* obj);
 void set_votes(group*g);

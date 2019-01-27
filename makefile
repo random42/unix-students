@@ -7,7 +7,9 @@ TEST = build/test.o \
 	build/random.o \
 	build/conf.o \
 	build/student.o \
-	build/group.o
+	build/group.o \
+	build/shm.o \
+	build/sem.o
 
 MANAGER = build/manager.o \
 	build/list.o \

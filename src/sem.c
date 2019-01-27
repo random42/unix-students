@@ -25,7 +25,7 @@ int sem_create(int key, int n_sems) {
 void sem_delete(int sem_id) {
   int r = semctl(sem_id, 0, IPC_RMID);
   if (r == -1) {
-    debug("sem_delete");
+    debug("sem_delete\n");
   }
 }
 

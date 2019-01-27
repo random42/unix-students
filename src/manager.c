@@ -146,7 +146,7 @@ void wait_for_messages() {
 }
 
 void on_group(msg* m) {
-  debug("GROUP");
+  debug("GROUP\n");
   student* leader = get_student(m->from);
   student* new = get_student(m->student);
   group* g;
@@ -161,21 +161,21 @@ void on_group(msg* m) {
   }
   else {
     g = new_group();
-    add_student(g, leader);
+    group_add_student(g, leader);
     g->leader = leader;
     list_add(groups, g);
   }
-  add_student(g, new);
+  group_add_student(g, new);
 }
 
 void on_close_group(msg* m) {
-  debug("CLOSE_GROUP");
+  debug("CLOSE_GROUP\n");
   student* leader = get_student(m->from);
   group* g = leader->group;
   // if student is not in any group
   if (!g) {
     g = new_group();
-    add_student(g, leader);
+    group_add_student(g, leader);
     g->leader = leader;
 
   }

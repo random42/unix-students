@@ -6,7 +6,7 @@
 #define ERROR(x); printf("ERROR\n");printf(x);printf("%s\n",strerror(errno));raise(SIGTERM);
 #define START_SEM_KEY 42435 // start sem
 #define DEBUG 1
-#define debug(x); if (DEBUG) printf("%s\n",x);
+#define debug(x); if (DEBUG) printf(x);
 
 typedef enum {FALSE,TRUE} bool;
 
