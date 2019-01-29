@@ -6,9 +6,9 @@
 #include "group.h"
 #include "random.h"
 
-extern int TWO;
-extern int THREE;
-extern int FOUR;
+extern double TWO;
+extern double THREE;
+extern double FOUR;
 
 student* new_student() {
   student* s = malloc(sizeof(student));
@@ -17,6 +17,7 @@ student* new_student() {
   s->nof_elems = random_nof_elems(TWO, THREE, FOUR);
   s->vote = 0;
   s->group = NULL;
+  s->invite = TRUE;
   return s;
 }
 
@@ -30,8 +31,27 @@ int set_vote(student* s) {
   return s->vote;
 }
 
+int student_imp(student* a, student* b) {
+  int diff = abs(a->voto_AdE - b->voto_AdE);
+  if (a->nof_elems == b->nof_elems)
+    return diff;
+  else return diff-3;
+}
+
+int student_imp_comp(void* a, void* b, void* self) {
+  student** x = a;
+  student** y = b;
+  int imp0 = student_imp(*x,(student*)self);
+  int imp1 = student_imp(*y,(student*)self);
+  if (imp0 > imp1)
+    return -1;
+  else if (imp0 < imp1)
+    return 1;
+  else return 0;
+}
+
+
 void print_student(void* obj) {
   student* s = (student*)obj;
-  char* sep = "\n   ";
-  printf("{%spid: %d,%svoto_AdE: %u,%snof_elems: %u,%svote: %u,%sgroup: %p\n}\n", sep, s->pid, sep, s->voto_AdE, sep, s->nof_elems, sep, s->vote, sep, s->group);
+  printf("{ pid: %d, voto_AdE: %u, nof_elems: %u, vote: %u, group: %p, invite: %d }", s->pid, s->voto_AdE, s->nof_elems, s->vote, s->group, s->invite);
 }

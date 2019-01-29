@@ -10,6 +10,7 @@
 
 extern int POP_SIZE;
 extern int SIM_TIME;
+extern int msg_manager;
 
 // start semaphore
 int start_sem_id;
@@ -128,13 +129,13 @@ void spawn_student(student* s) {
 void wait_for_messages() {
   msg* m = malloc(sizeof(msg));
   while (1) {
-    msg_receive(m, TRUE);
+    msg_receive(msg_manager, m, TRUE);
     switch(m->type) {
-      case GROUP: {
+      case MSG_GROUP: {
         on_group(m);
         break;
       }
-      case CLOSE_GROUP: {
+      case MSG_CLOSE_GROUP: {
         on_close_group(m);
         break;
       }
@@ -146,7 +147,7 @@ void wait_for_messages() {
 }
 
 void on_group(msg* m) {
-  debug("GROUP\n");
+  debug("MSG_GROUP\n");
   student* leader = get_student(m->from);
   student* new = get_student(m->student);
   group* g;
@@ -169,7 +170,7 @@ void on_group(msg* m) {
 }
 
 void on_close_group(msg* m) {
-  debug("CLOSE_GROUP\n");
+  debug("MSG_CLOSE_GROUP\n");
   student* leader = get_student(m->from);
   group* g = leader->group;
   // if student is not in any group
@@ -204,7 +205,7 @@ void set_votes() {
 // initialize ipc structures
 void ipc_init() {
   start_sem_id = sem_create(START_SEM_KEY, 1);
-  shm_create(POP_SIZE);
+  shm_create();
   msg_init();
 }
 

@@ -7,7 +7,7 @@
 
 typedef struct group_t {
   int size;
-  list* students;
+  student** students;
   student* leader;
   bool closed;
   int max_vote;

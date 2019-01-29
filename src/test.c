@@ -7,6 +7,7 @@
 #include "random.h"
 #include "student.h"
 #include "group.h"
+#include "sort.h"
 #include "shm.h"
 
 extern double TWO;
@@ -24,7 +25,8 @@ void print_int(void* a) {
 void test_conf() {
   //ERROR("Test error!\n");
   config_init();
-  printf("Config:\n%lf, %lf, %lf, %d, %d, %d, %d\n", TWO, THREE, FOUR, NOF_INVITES, MAX_REJECT, POP_SIZE, SIM_TIME);
+  printf("\n\nCONF TEST\n\n");
+  printf("two: %lf, three: %lf, four: %lf, nof_invites: %d, max_reject: %d, pop_size: %d, sim_time: %d\n", TWO, THREE, FOUR, NOF_INVITES, MAX_REJECT, POP_SIZE, SIM_TIME);
 }
 
 void test_list() {
@@ -44,6 +46,7 @@ void test_list() {
 }
 
 void test_random() {
+  printf("\n\nRANDOM TEST\n\n");
   random_init();
   int tests = 1000;
   int two = 0, three = 0, four = 0;
@@ -77,10 +80,13 @@ void test_student() {
   s->pid = 1;
   s1->pid = 2;
   s2->pid = 3;
-  printf("\nPrinting students\n");
+  printf("\n\nSTUDENT TEST\n\n");
   print_student(s);
+  printf("\n");
   print_student(s1);
+  printf("\n");
   print_student(s2);
+  printf("\n");
   group* g = new_group();
   group_add_student(g, s);
   group_add_student(g, s1);
@@ -121,6 +127,24 @@ void test_shm() {
   shm_delete();
 }
 
+void test_improvement_sort() {
+  printf("\nIMPROVEMENT SORT TEST\n\n");
+  student* self = new_student();
+  int length = 5;
+  student* arr[length];
+  for (int i = 0; i < length;i++) {
+    arr[i] = new_student();
+  }
+  for (int i = 0; i < length;i++) {
+    printf("imp: %d, nof_elems uguale: %d, voto self: %d, voto: %d\n", student_imp(self, arr[i]), self->nof_elems == arr[i]->nof_elems, self->voto_AdE, arr[i]->voto_AdE);
+  }
+  printf("\n\n");
+  qsort_s(arr, length, sizeof(student*), student_imp_comp, self);
+  for (int i = 0; i < length;i++) {
+    printf("imp: %d, nof_elems uguale: %d, voto self: %d, voto: %d\n", student_imp(self, arr[i]), self->nof_elems == arr[i]->nof_elems, self->voto_AdE, arr[i]->voto_AdE);
+  }
+}
+
 int main() {
   //atexit(shm_delete);
   test_conf();
@@ -128,4 +152,5 @@ int main() {
   test_random();
   test_student();
   test_shm();
+  test_improvement_sort();
 }

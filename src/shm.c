@@ -17,10 +17,11 @@
 void* shm_ptr;
 int shm_id;
 int sem_id;
+extern int POP_SIZE;
 
 // used by manager
-void* shm_create(int students) {
-  int size = sizeof(int) + (sizeof(shm_student) * students);
+void* shm_create() {
+  int size = (sizeof(student) * POP_SIZE);
   shm_id = shmget(SHM_KEY, size, 0600 | IPC_CREAT);
   if (shm_id == -1) {
     ERROR("shmget\n");
@@ -37,17 +38,12 @@ void* shm_create(int students) {
 
 void shm_write_students(list* students) {
   shm_write();
-  int* length = (int*)shm_ptr;
-  *length = students->length;
   node* n = students->first;
-  shm_student* arr = (shm_student*)(shm_ptr + sizeof(int));
+  student* arr = (student*)shm_ptr;
   for (int i = 0; i < students->length; i++) {
     student* s = (student*)n->elem;
-    shm_student* x = &arr[i];
-    x->pid = s->pid;
-    x->voto_AdE = s->voto_AdE;
-    x->nof_elems = s->nof_elems;
-    x->in_closed_group = FALSE;
+    student* x = &arr[i];
+    memcpy(x, s, sizeof(student));
     n = n->next;
   }
   shm_stop_write();
@@ -55,13 +51,12 @@ void shm_write_students(list* students) {
 
 void shm_close_group(int* pids, int length) {
   shm_write();
-  int size = *((int*)shm_ptr);
-  shm_student* arr = (shm_student*)(shm_ptr + sizeof(int));
-  for (int i = 0; i < size; i++) {
-    shm_student* x = &arr[i];
+  student* arr = (student*)shm_ptr;
+  for (int i = 0; i < POP_SIZE; i++) {
+    student* x = &arr[i];
     for (int j = 0; j < length;j++) {
       if (x->pid == pids[j]) {
-        x->in_closed_group = TRUE;
+        x->invite = FALSE;
       }
     }
   }
@@ -118,18 +113,14 @@ void shm_delete() {
   sem_delete(sem_id);
 }
 
-void shm_student_print(shm_student* s) {
-  char* sep = " ";
-  printf("{%spid: %d,%svoto_AdE: %u,%snof_elems: %u,%sin_closed_group: %d\n}\n", sep, s->pid, sep, s->voto_AdE, sep, s->nof_elems, sep, s->in_closed_group);
-}
-
 void shm_print() {
+  printf("\nSHARED MEMORY STATE\n\n");
   shm_read();
-  int size = *((int*)shm_ptr);
-  shm_student* arr = (shm_student*)(shm_ptr + sizeof(int));
-  for (int i = 0; i < size; i++) {
-    shm_student* x = &arr[i];
-    shm_student_print(x);
+  student* arr = (student*)shm_ptr;
+  for (int i = 0; i < POP_SIZE; i++) {
+    student* x = &arr[i];
+    print_student(x);
+    printf("\n");
   }
   shm_stop_read();
 }

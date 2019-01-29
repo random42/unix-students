@@ -8,7 +8,7 @@
 
 group* new_group() {
   group* g = malloc(sizeof(group));
-  g->students = new_list();
+  g->students = malloc(sizeof(student*) * 4);
   g->leader = NULL;
   g->closed = FALSE;
   g->max_vote = 0;
@@ -16,9 +16,11 @@ group* new_group() {
 }
 
 void group_add_student(group* g, student* s) {
+  if (g->size == 4) {
+    ERROR("Adding student to group of 4 students.");
+  }
   s->group = g;
-  list_add(g->students, s);
-  g->size++;
+  g->students[g->size++] = s;
   if (s->voto_AdE > g->max_vote)
     g->max_vote = s->voto_AdE;
 }
@@ -34,9 +36,12 @@ void print_student_num(void* obj) {
 void print_group(void* obj) {
   group* g = (group*)obj;
   char* sep = "\n   ";
-  printf("{%ssize: %u,%sstudents: ", sep, g->size, sep);
-  print_list(g->students, print_student_num);
-  printf(",%sleader: ", sep);
+  printf("{%ssize: %u,%sstudents: [", sep, g->size, sep);
+  for (int i = 0; i < g->size;i++) {
+    print_student_num(g->students[i]);
+    if (i < g->size-1) printf(",");
+  }
+  printf("],%sleader: ", sep);
   print_student_num(g->leader);
   printf(",%sclosed: %s,%s", sep, g->closed ? "TRUE" : "FALSE",sep);
   printf("max_vote: %d", g->max_vote);

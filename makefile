@@ -9,7 +9,8 @@ TEST = build/test.o \
 	build/student.o \
 	build/group.o \
 	build/shm.o \
-	build/sem.o
+	build/sem.o \
+	build/sort.o
 
 MANAGER = build/manager.o \
 	build/list.o \
@@ -31,7 +32,7 @@ STUDENT = build/child.o \
 	build/sem.o \
 	build/shm.o
 
-all: dir test manager student
+all: dir test manager
 
 manager: $(MANAGER)
 	$(CC) -o bin/$@ $^

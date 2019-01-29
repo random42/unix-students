@@ -8,81 +8,93 @@
 #include "conf.h"
 #include "msg.h"
 
-// message queue id
-int msg_id;
+// invite and group queue
+int msg_invitation;
+// response queue
+int msg_response;
+// messages between students and manager
+int msg_manager;
 int msg_size;
 
-void msg_send(msg* m, int flag) {
-  int r = msgsnd(msg_id, &m, msg_size, flag);
+void msg_send(int msq, msg* m, int flag) {
+  int r = msgsnd(msq, &m, msg_size, flag);
   if (r == -1) {
     ERROR("msgsnd\n");
   }
 }
 
 void msg_init() {
-  msg_id = msgget(MSG_KEY, IPC_CREAT | 0600);
+  msg_invitation = msgget(MSG_INVITE_KEY, IPC_CREAT | 0600);
+  msg_response = msgget(MSG_RESPONSE_KEY, IPC_CREAT | 0600);
+  msg_manager = msgget(MSG_MANAGER_KEY, IPC_CREAT | 0600);
   msg_size = sizeof(msg) - sizeof(long);
-  if (msg_id == -1) {
-    ERROR("Cannot create message queue.");
+  if (msg_invitation == -1 || msg_response == -1 || msg_manager == -1) {
+    ERROR("msg_init");
   }
 }
 
-void msg_invite(int pid, int voto_AdE, int nof_elems) {
+void msg_invite(int pid, student* self) {
   msg m;
   m.mtype = pid;
   m.from = getpid();
-  m.type = INVITE;
-  m.voto_AdE = voto_AdE;
-  m.nof_elems = nof_elems;
-  msg_send(&m, msg_size);
+  m.type = MSG_INVITE;
+  memcpy(&m.s, self, sizeof(student));
+  msg_send(msg_invitation, &m, msg_size);
 }
 
 void msg_respond(int pid, bool response) {
   msg m;
   m.mtype = pid;
   m.from = getpid();
-  m.type = RESPONSE;
+  m.type = MSG_RESPONSE;
   m.response = response;
-  msg_send(&m, 0);
+  msg_send(msg_response, &m, 0);
 }
 
 void msg_send_vote(student* s) {
   msg m;
   m.mtype = s->pid;
   m.from = getpid();
-  m.type = VOTE;
+  m.type = MSG_VOTE;
   m.vote = s->vote;
-  msg_send(&m, 0);
+  msg_send(msg_manager, &m, 0);
 }
 
-void msg_receive(msg* buffer, bool wait) {
+int msg_receive(int msq, msg* buffer, bool wait) {
   int flag = wait ? 0 : IPC_NOWAIT;
-  int r = msgrcv(msg_id, buffer, msg_size, getpid(), flag);
+  int r = msgrcv(msq, buffer, msg_size, getpid(), flag);
   if (r == -1) {
-    ERROR("msgrcv\n");
+    if (!wait && errno == ENOMSG)
+      return -1;
+    else {
+      ERROR("msgrcv\n");
+    }
   }
+  return 0;
 }
 
 void msg_group(int student) {
   msg m;
   m.mtype = getppid();
   m.from = getpid();
-  m.type = GROUP;
+  m.type = MSG_GROUP;
   m.student = student;
-  msg_send(&m, 0);
+  msg_send(msg_manager, &m, 0);
 }
 
 void msg_close_group() {
   msg m;
   m.mtype = getppid();
   m.from = getpid();
-  m.type = CLOSE_GROUP;
-  msg_send(&m, 0);
+  m.type = MSG_CLOSE_GROUP;
+  msg_send(msg_manager, &m, 0);
 }
 
 void msg_close() {
-  int r = msgctl(msg_id, IPC_RMID, NULL);
-  if (r == -1) {
+  int a = msgctl(msg_invitation, IPC_RMID, NULL);
+  int b = msgctl(msg_response, IPC_RMID, NULL);
+  int c = msgctl(msg_manager, IPC_RMID, NULL);
+  if (a == -1 || b == -1 || c == -1) {
     debug("msgctl\n");
   }
 }
