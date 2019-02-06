@@ -16,7 +16,7 @@
 
 void* shm_ptr;
 int shm_id;
-int sem_id;
+int shm_sem_id;
 extern int POP_SIZE;
 
 // used by manager
@@ -30,9 +30,9 @@ void* shm_create() {
   if (shm_ptr == (void*)-1) {
     ERROR("shmat\n");
   }
-  sem_id = sem_create(SHM_SEM_KEY, 3);
+  shm_sem_id = sem_create(SHM_SEM_KEY, 3);
   // writing lock is free at start
-  sem_set(sem_id, WRITE, 1);
+  sem_set(shm_sem_id, WRITE, 1);
   return shm_ptr;
 }
 
@@ -49,12 +49,19 @@ void shm_write_students(list* students) {
   shm_stop_write();
 }
 
-void shm_close_group(int* pids, int length) {
+void shm_close_group(group* g) {
   shm_write();
+  int pids[g->size];
+  node* n = g->students->first;
+  for (int i = 0; i < g->size;i++) {
+    student* s = (student*)n->elem;
+    pids[i] = s->pid;
+    n = n->next;
+  }
   student* arr = (student*)shm_ptr;
   for (int i = 0; i < POP_SIZE; i++) {
     student* x = &arr[i];
-    for (int j = 0; j < length;j++) {
+    for (int j = 0; j < g->size;j++) {
       if (x->pid == pids[j]) {
         x->invite = FALSE;
       }
@@ -73,36 +80,36 @@ void* shm_get() {
   if (shm_ptr == (void*)-1) {
     ERROR("shmat\n");
   }
-  sem_id = sem_get(SHM_SEM_KEY);
+  shm_sem_id = sem_get(SHM_SEM_KEY);
   return shm_ptr;
 }
 
 void shm_read() {
   // waiting for writers to write
-  sem_op(sem_id, WRITE_WAIT, 0, TRUE);
+  sem_op(shm_sem_id, WRITE_WAIT, 0, TRUE);
   // increase readers by 1
-  sem_op(sem_id, READ, 1, TRUE);
+  sem_op(shm_sem_id, READ, 1, TRUE);
 }
 
 void shm_stop_read() {
   // decrease readers by 1
-  sem_op(sem_id, READ, -1, TRUE);
+  sem_op(shm_sem_id, READ, -1, TRUE);
 }
 
 void shm_write() {
   // increase writers waiting by 1
-  sem_op(sem_id, WRITE_WAIT, 1, TRUE);
+  sem_op(shm_sem_id, WRITE_WAIT, 1, TRUE);
   // wait for readers to go to 0
-  sem_op(sem_id, READ, 0, TRUE);
+  sem_op(shm_sem_id, READ, 0, TRUE);
   // get writing lock
-  sem_op(sem_id, WRITE, -1, TRUE);
+  sem_op(shm_sem_id, WRITE, -1, TRUE);
 }
 
 void shm_stop_write() {
   // release writing lock
-  sem_op(sem_id, WRITE, 1, TRUE);
+  sem_op(shm_sem_id, WRITE, 1, TRUE);
   // decrease writers waiting by 1
-  sem_op(sem_id, WRITE_WAIT, -1, TRUE);
+  sem_op(shm_sem_id, WRITE_WAIT, -1, TRUE);
 
 }
 
@@ -110,7 +117,7 @@ void shm_delete() {
   if (shmctl(shm_id, IPC_RMID, NULL) == -1) {
     debug("shmctl\n");
   }
-  sem_delete(sem_id);
+  sem_delete(shm_sem_id);
 }
 
 void shm_print() {

@@ -2,38 +2,29 @@
 
 #define CHILD_H
 
-typedef enum {INVITE, RESPOND, } action;
+#include "student.h"
 
 void init();
 void start();
 void end(int signal);
 void ipc_init();
 
-// a ogni ciclo decide se invitare uno studente o
-// aspettare un invito
-void main_loop();
-
-// decide il tipo di azione
-action choose_action();
-
-student** create_invite_array();
-
-// invita uno studente
-// se non ci sono studenti da invitare o sono finiti gli inviti disponibili
-// ritorna FALSE, altrimenti TRUE
-bool invite_one();
-
-// risponde negativamente a tutti gli inviti in coda
-void reject_pending();
-
-// ascolta
-void wait_for_invite();
-
-void accept_invite(student* leader);
-
-void handle_accept();
-
+// compara studenti per voto e pid
+int compare_students(student** a, student** b);
+void divide_students();
 void wait_for_vote();
 
+// leader functions
+void leader_flow();
+void wait_turn();
+void choose_mates();
+bool has_better_leader(student* s);
+void invite();
+void wait_for_responses();
+void close_group();
+
+// non-leader functions
+void non_leader_flow();
+void wait_for_invite();
 
 #endif

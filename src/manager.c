@@ -10,10 +10,10 @@
 
 extern int POP_SIZE;
 extern int SIM_TIME;
-extern int msg_manager;
+extern int msg_id;
 
 // start semaphore
-int start_sem_id;
+int sem_id;
 
 // path to student executable
 char* student_path;
@@ -39,7 +39,7 @@ void start() {
   // write students to shared memory
   shm_write_students(students);
   // decrements the semaphore to let children start
-  sem_op(start_sem_id, 0, -POP_SIZE, TRUE);
+  sem_op(sem_id, START_SEM, -POP_SIZE, TRUE);
   wait_for_messages();
 }
 
@@ -129,7 +129,7 @@ void spawn_student(student* s) {
 void wait_for_messages() {
   msg* m = malloc(sizeof(msg));
   while (1) {
-    msg_receive(msg_manager, m, TRUE);
+    msg_receive(msg_id, m, TRUE);
     switch(m->type) {
       case MSG_GROUP: {
         on_group(m);
@@ -149,7 +149,7 @@ void wait_for_messages() {
 void on_group(msg* m) {
   debug("MSG_GROUP\n");
   student* leader = get_student(m->from);
-  student* new = get_student(m->student);
+  student* new = get_student(m->data);
   group* g;
   if (leader->group) {
     g = leader->group;
@@ -172,6 +172,7 @@ void on_group(msg* m) {
 void on_close_group(msg* m) {
   debug("MSG_CLOSE_GROUP\n");
   student* leader = get_student(m->from);
+  int leader_num = m->data;
   group* g = leader->group;
   // if student is not in any group
   if (!g) {
@@ -188,6 +189,9 @@ void on_close_group(msg* m) {
   }
   g->closed = TRUE;
   list_add(closed_groups, g);
+  shm_close_group(g);
+  // next leader turn to invite
+  sem_op(sem_id, TURN_SEM, leader_num + 1, TRUE);
 }
 
 void end(int signal) {
@@ -204,13 +208,13 @@ void set_votes() {
 
 // initialize ipc structures
 void ipc_init() {
-  start_sem_id = sem_create(START_SEM_KEY, 1);
+  sem_id = sem_create(SEM_KEY, 1);
   shm_create();
   msg_init();
 }
 
 void ipc_close() {
-  sem_delete(start_sem_id);
+  sem_delete(sem_id);
   msg_close();
   shm_delete();
 }

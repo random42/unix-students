@@ -24,38 +24,30 @@ extern int msg_response;
 // shared memory pointer
 extern void* shm_ptr;
 
-int start_sem_id;
+int sem_id;
 
 // lo studente del processo
 student* self;
 
-/*
-  array che contiene gli studenti con voto minore o uguale in ordine
-  di miglioramento di voto
-*/
-student** invite_array;
+student** all;
 
-// numero di studenti con voto minore o uguale
-int invite_size;
+student** leaders;
+int leaders_size;
 
-// numero di studenti con voto maggiore o uguale
-int receive_size;
+student** non_leaders;
+int non_leaders_size;
 
-// inviti senza risposta
-int pending_invites;
+list* mates;
 
 // inviti totali
 int invites;
 // rifiuti totali
 int rejections;
 
-// TRUE se puo' invitare
-bool can_invite;
-
-// TRUE se si e' leader del gruppo
-// (inizialmente tutti sono leader del proprio gruppo)
-bool leader = TRUE;
+bool leader;
+int leader_num;
 int group_size = 1;
+int target_group_size;
 
 
 int main(int argc, char* argv[]) {
@@ -68,7 +60,7 @@ int main(int argc, char* argv[]) {
 }
 
 void ipc_init() {
-  start_sem_id = sem_get(START_SEM_KEY);
+  sem_id = sem_get(SEM_KEY);
   msg_init();
   shm_get();
 }
@@ -84,62 +76,78 @@ void end(int signal) {
 
 void start() {
   // increments start semaphore
-  sem_op(start_sem_id, 0, 1, TRUE);
+  sem_op(sem_id, START_SEM, 1, TRUE);
   // wait for start semaphore to be 0
-  sem_op(start_sem_id, 0, 0, TRUE);
+  sem_op(sem_id, START_SEM, 0, TRUE);
   printf("pid: %d\n", getpid());
   invite_array = create_invite_array();
   main_loop();
 }
 
-// a ogni ciclo decide se invitare uno studente o
-// aspettare un invito
-void main_loop() {
-
+int compare_students(student** a, student** b, void* ctx) {
+  student* x = *a;
+  student* y = *b;
+  if (x->voto_AdE > y->voto_AdE)
+    return -1;
+  else if (x->voto_AdE < y->voto_AdE)
+    return 1;
+  else {
+    if (x->pid > y->pid)
+      return 1;
+    else return -1;
+  }
 }
 
-// decide il tipo di azione
-action choose_action() {
-
+void switch(void** arr, int i, int j) {
+  void* temp = arr[i];
+  arr[i] = arr[j];
+  arr[j] = temp;
 }
 
-student** create_invite_array() {
-  shm_read();
-  student* arr = shm_ptr;
-  invite_array = malloc(sizeof(student*) * POP_SIZE-1);
+void divide_students() {
+  all = malloc(sizeof(student*) * POP_SIZE);
+  leaders = all;
+  student* s = (student*)shm_ptr;
   for (int i = 0; i < POP_SIZE;i++) {
-    // non guardo il processo stesso
-    if (arr[i].pid != self->pid) {
-      // se il voto e' minore o uguale lo aggiungo alla lista di studenti
-      // invitabili
-      if (arr[i].voto_AdE <= self->voto_AdE) {
-        invite_array[invite_size++] = &arr[i];
-      }
-      // se e' maggiore o uguale aumento il numero di studenti
-      // che possono invitarmi
-      if (arr[i].voto_AdE >= self->voto_AdE) {
-        receive_size++;
-      }
+    all[i] = &s[i];
+  }
+  shm_read();
+  qsort_s(all, POP_SIZE, sizeof(student*), compare_students, NULL);
+  int group_elems = 0;
+  int i = 0;
+  student* l = NULL;
+  while (group_elems < POP_SIZE) {
+    l = all[i++];
+    group_elems += l->nof_elems;
+    if (self->pid == l->pid) {
+      // self is a leader
+      leader = TRUE;
+      leader_num = i;
+      target_group_size = self->nof_elems;
     }
   }
-  // ordino l'array per miglioramento generale di voto
-  qsort_s(invite_array, invite_size, sizeof(student*), student_imp_comp, self);
+  leaders_size = i;
   shm_stop_read();
+  // last leader has more elems than needed and self is last leader
+  if (group_elems > POP_SIZE && leader && leader_num == i-1) {
+    target_group_size = nof_elems - (group_elems - POP_SIZE);
+  }
+  non_leaders = &all[i];
+  non_leaders_size = POP_SIZE - leaders_size;
 }
 
-// invita uno studente
-// se non ci sono studenti da invitare o sono finiti gli inviti disponibili
-// ritorna FALSE, altrimenti TRUE
-bool invite_one();
-
-// risponde negativamente a tutti gli inviti in coda
-void reject_pending();
-
-// ascolta
-void wait_for_invite();
-
-void accept_invite(student* leader);
-
-void handle_accept();
 
 void wait_for_vote();
+
+// leader functions
+void leader_flow();
+void wait_turn();
+void choose_mates();
+bool has_better_leader(student* s);
+void invite();
+void wait_for_responses();
+void close_group();
+
+// non-leader functions
+void non_leader_flow();
+void wait_for_invite();

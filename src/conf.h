@@ -4,7 +4,9 @@
 #include <string.h>
 #include <signal.h>
 #define ERROR(x); printf("ERROR\n");printf(x);printf("%s\n",strerror(errno));raise(SIGTERM);
-#define START_SEM_KEY 42435 // start sem
+#define SEM_KEY 42435
+#define START_SEM 0
+#define TURN_SEM 1
 #define DEBUG 1
 #define debug(x); if (DEBUG) printf(x);
 
