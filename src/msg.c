@@ -8,16 +8,12 @@
 #include "conf.h"
 #include "msg.h"
 
-// invite and group queue
-int msg_id;
-// response queue
-int msg_id;
-// messages between students and manager
+
 int msg_id;
 int msg_size;
 
-void msg_send(int msq, msg* m, int flag) {
-  int r = msgsnd(msq, &m, msg_size, flag);
+void msg_send(msg* m, int flag) {
+  int r = msgsnd(&m, msg_size, flag);
   if (r == -1) {
     ERROR("msgsnd\n");
   }
@@ -36,7 +32,7 @@ void msg_invite(int pid, student* self) {
   m.mtype = pid;
   m.from = getpid();
   m.type = MSG_INVITE;
-  msg_send(msg_id, &m, 0);
+  msg_send(&m, 0);
 }
 
 void msg_respond(int pid, bool response) {
@@ -45,7 +41,7 @@ void msg_respond(int pid, bool response) {
   m.from = getpid();
   m.type = MSG_RESPONSE;
   m.data = (int)response;
-  msg_send(msg_id, &m, 0);
+  msg_send(&m, 0);
 }
 
 void msg_send_vote(student* s) {
@@ -54,12 +50,12 @@ void msg_send_vote(student* s) {
   m.from = getpid();
   m.type = MSG_VOTE;
   m.data = s->vote;
-  msg_send(msg_id, &m, 0);
+  msg_send(&m, 0);
 }
 
-int msg_receive(int msq, msg* buffer, bool wait) {
+int msg_receive(msg* buffer, bool wait) {
   int flag = wait ? 0 : IPC_NOWAIT;
-  int r = msgrcv(msq, buffer, msg_size, getpid(), flag);
+  int r = msgrcv(msg_id, buffer, msg_size, getpid(), flag);
   if (r == -1) {
     if (!wait && errno == ENOMSG)
       return -1;
@@ -76,7 +72,7 @@ void msg_group(int student) {
   m.from = getpid();
   m.type = MSG_GROUP;
   m.data = student;
-  msg_send(msg_id, &m, 0);
+  msg_send(&m, 0);
 }
 
 void msg_close_group(int leader_num) {
@@ -85,7 +81,7 @@ void msg_close_group(int leader_num) {
   m.from = getpid();
   m.type = MSG_CLOSE_GROUP;
   m.data = leader_num;
-  msg_send(msg_id, &m, 0);
+  msg_send(&m, 0);
 }
 
 void msg_close() {

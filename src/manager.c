@@ -45,6 +45,7 @@ void start() {
 
 // initialize data structures
 void init() {
+  atexit(ipc_close);
   // read configuration file
   config_init();
   // initialize random library
@@ -198,7 +199,6 @@ void end(int signal) {
   debug("END\n");
   print_infos();
   wait_for_children();
-  ipc_close();
   exit(EXIT_SUCCESS);
 }
 

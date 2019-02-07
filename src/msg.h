@@ -25,7 +25,7 @@ void msg_init();
 void msg_invite(int pid);
 void msg_respond(int pid, bool response);
 void msg_send_vote(student* s);
-int msg_receive(int msq, msg* buffer, bool wait);
+int msg_receive(msg* buffer, bool wait);
 void msg_group(int student);
 void msg_close_group(int leader_num);
 void msg_close();

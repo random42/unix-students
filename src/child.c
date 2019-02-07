@@ -18,9 +18,6 @@ extern int MAX_REJECT;
 extern int POP_SIZE;
 extern int SIM_TIME;
 
-// message queues ids
-extern int msg_invitation;
-extern int msg_response;
 // shared memory pointer
 extern void* shm_ptr;
 
@@ -49,6 +46,34 @@ int leader_num;
 int group_size = 1;
 int target_group_size;
 
+int min(int a, int b) {
+  return a < b ? a : b;
+}
+
+int compare_vote(student** a, student** b, void* ctx) {
+  student* x = *a;
+  student* y = *b;
+  if (x->voto_AdE > y->voto_AdE)
+    return -1;
+  else if (x->voto_AdE < y->voto_AdE)
+    return 1;
+  else {
+    if (x->pid > y->pid)
+      return 1;
+    else return -1;
+  }
+}
+
+int compare_improvement(student** a, student** b, void* nof_elems) {
+  int elems = *(int*)nof_elems;
+  student* x = *a;
+  student* y = *b;
+  int x_v = elems == x->nof_elems ? x->voto_AdE : x->voto_AdE + 3;
+  int y_v = elems == y->nof_elems ? y->voto_AdE : y->voto_AdE + 3;
+  if (x_v < y_v) return 1;
+  else if (y_v < x_v) return -1;
+  else return 0;
+}
 
 int main(int argc, char* argv[]) {
   self = new_student();
@@ -70,10 +95,6 @@ void init() {
   ipc_init();
 }
 
-void end(int signal) {
-
-}
-
 void start() {
   // increments start semaphore
   sem_op(sem_id, START_SEM, 1, TRUE);
@@ -84,26 +105,13 @@ void start() {
   main_loop();
 }
 
-int compare_students(student** a, student** b, void* ctx) {
-  student* x = *a;
-  student* y = *b;
-  if (x->voto_AdE > y->voto_AdE)
-    return -1;
-  else if (x->voto_AdE < y->voto_AdE)
-    return 1;
-  else {
-    if (x->pid > y->pid)
-      return 1;
-    else return -1;
-  }
-}
-
 void switch(void** arr, int i, int j) {
   void* temp = arr[i];
   arr[i] = arr[j];
   arr[j] = temp;
 }
 
+// divide between leaders and non-leaders
 void divide_students() {
   all = malloc(sizeof(student*) * POP_SIZE);
   leaders = all;
@@ -112,42 +120,70 @@ void divide_students() {
     all[i] = &s[i];
   }
   shm_read();
+  // sort students by vote
   qsort_s(all, POP_SIZE, sizeof(student*), compare_students, NULL);
-  int group_elems = 0;
+  int total = 0;
   int i = 0;
   student* l = NULL;
-  while (group_elems < POP_SIZE) {
-    l = all[i++];
-    group_elems += l->nof_elems;
+  // choose leaders among best votes until they fill POP_SIZE
+  while (total < POP_SIZE) {
+    l = all[i];
+    int elems = min(l->nof_elems, NOF_INVITES + 1);
+    total += elems;
     if (self->pid == l->pid) {
       // self is a leader
       leader = TRUE;
       leader_num = i;
-      target_group_size = self->nof_elems;
+      target_group_size = elems;
     }
+    i++;
   }
   leaders_size = i;
   shm_stop_read();
   // last leader has more elems than needed and self is last leader
-  if (group_elems > POP_SIZE && leader && leader_num == i-1) {
-    target_group_size = nof_elems - (group_elems - POP_SIZE);
+  if (leader && leader_num == leaders_size-1 && total > POP_SIZE) {
+    target_group_size -= (total - POP_SIZE);
   }
   non_leaders = &all[i];
   non_leaders_size = POP_SIZE - leaders_size;
 }
 
+void wait_for_vote() {
+  msg m;
+  msg_receive(&m, TRUE);
+  if (m.type != MSG_VOTE) {
+    ERROR("Not MSG_VOTE\n");
+  }
+  self->vote = m.data;
+  printf("Student %d got from %d to %d\n", self->pid, self->voto_AdE, self->vote);
+  exit(EXIT_SUCCESS);
+}
 
-void wait_for_vote();
+void leader_flow() {
+  wait_turn();
+  debug("Leader: %d, pid: %d, vote: %d, nof_elems: %d, target: %d\n", leader_num, self->pid, self->voto_AdE, self->nof_elems, target_group_size);
+  choose_mates();
+  invite();
+  wait_for_responses();
+  close_group();
+}
 
-// leader functions
-void leader_flow();
-void wait_turn();
-void choose_mates();
+void wait_turn() {
+  // aspetta che il semaforo abbia il suo numero di leader e lo manda a 0
+  // dopo aver chiuso il gruppo il manager aumentera' il semaforo di leader_num + 1
+  // cosi che il prossimo leader faccia il suo gruppo
+  sem_op(sem_id, TURN_SEM, -leader_num, TRUE);
+}
+
+void choose_mates() {
+
+}
+
 bool has_better_leader(student* s);
 void invite();
 void wait_for_responses();
 void close_group();
 
-// non-leader functions
+
 void non_leader_flow();
 void wait_for_invite();
