@@ -8,6 +8,7 @@
 #include "sem.h"
 #include "list.h"
 #include "student.h"
+#include "group.h"
 #define SHM_KEY 1234
 #define SHM_SEM_KEY 1253
 #define READ 0 // num of readers
@@ -52,11 +53,8 @@ void shm_write_students(list* students) {
 void shm_close_group(group* g) {
   shm_write();
   int pids[g->size];
-  node* n = g->students->first;
   for (int i = 0; i < g->size;i++) {
-    student* s = (student*)n->elem;
-    pids[i] = s->pid;
-    n = n->next;
+    pids[i] = g->students[i]->pid;
   }
   student* arr = (student*)shm_ptr;
   for (int i = 0; i < POP_SIZE; i++) {

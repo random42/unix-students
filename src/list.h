@@ -2,10 +2,10 @@
 
 #define LIST_H
 
-typedef struct n {
+typedef struct node {
   void* elem;
-  struct n* next;
-  struct n* prev;
+  struct node* next;
+  struct node* prev;
 } node;
 
 typedef struct {

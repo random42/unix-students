@@ -4,13 +4,19 @@
 
 #include "student.h"
 
+// utils
+int min(int a, int b);
+int improvement(student* leader, student* s);
+int compare_vote(student** a, student** b, void* ctx);
+int compare_improvement(student** a, student** b, student** leader);
+
+// main
 void init();
 void start();
 void end(int signal);
 void ipc_init();
 
 // compara studenti per voto e pid
-int compare_students(student** a, student** b);
 void divide_students();
 void wait_for_vote();
 

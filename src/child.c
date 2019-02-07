@@ -12,6 +12,7 @@
 #include "msg.h"
 #include "sem.h"
 #include "sort.h"
+#include "child.h"
 
 extern int NOF_INVITES;
 extern int MAX_REJECT;
@@ -34,20 +35,28 @@ int leaders_size;
 student** non_leaders;
 int non_leaders_size;
 
-list* mates;
 
 // inviti totali
 int invites;
 // rifiuti totali
 int rejections;
 
+// is self leader?
 bool leader;
+// mates' pid
+int mates[3];
 int leader_num;
-int group_size = 1;
 int target_group_size;
+
+// utility functions
 
 int min(int a, int b) {
   return a < b ? a : b;
+}
+
+int improvement(student* leader, student* s) {
+  int imp = leader->voto_AdE - s->voto_AdE;
+  return leader->nof_elems == s->nof_elems ? imp : imp - 3;
 }
 
 int compare_vote(student** a, student** b, void* ctx) {
@@ -64,22 +73,27 @@ int compare_vote(student** a, student** b, void* ctx) {
   }
 }
 
-int compare_improvement(student** a, student** b, void* nof_elems) {
-  int elems = *(int*)nof_elems;
+int compare_improvement(student** a, student** b, student** leader) {
   student* x = *a;
   student* y = *b;
-  int x_v = elems == x->nof_elems ? x->voto_AdE : x->voto_AdE + 3;
-  int y_v = elems == y->nof_elems ? y->voto_AdE : y->voto_AdE + 3;
-  if (x_v < y_v) return 1;
-  else if (y_v < x_v) return -1;
+  student* l = *leader;
+  int imp_x = improvement(l, x);
+  int imp_y = improvement(l, y);
+  if (imp_x > imp_y)
+    return -1;
+  else if (imp_y > imp_x)
+    return 1;
   else return 0;
 }
+
+// main
 
 int main(int argc, char* argv[]) {
   self = new_student();
   self->pid = getpid();
   self->voto_AdE = strtoul(argv[1], NULL, 10);
   self->nof_elems = strtoul(argv[2], NULL, 10);
+  debug("main\n");
   init();
   start();
 }
@@ -100,15 +114,13 @@ void start() {
   sem_op(sem_id, START_SEM, 1, TRUE);
   // wait for start semaphore to be 0
   sem_op(sem_id, START_SEM, 0, TRUE);
-  printf("pid: %d\n", getpid());
-  invite_array = create_invite_array();
-  main_loop();
-}
-
-void switch(void** arr, int i, int j) {
-  void* temp = arr[i];
-  arr[i] = arr[j];
-  arr[j] = temp;
+  debug("start\n");
+  divide_students();
+  if (leader)
+    leader_flow();
+  else
+    non_leader_flow();
+  wait_for_vote();
 }
 
 // divide between leaders and non-leaders
@@ -121,7 +133,7 @@ void divide_students() {
   }
   shm_read();
   // sort students by vote
-  qsort_s(all, POP_SIZE, sizeof(student*), compare_students, NULL);
+  qsort_s(all, POP_SIZE, sizeof(student*), compare_vote, NULL);
   int total = 0;
   int i = 0;
   student* l = NULL;
@@ -176,14 +188,67 @@ void wait_turn() {
 }
 
 void choose_mates() {
-
+  shm_read();
+  // sort students by their improvement if in self group
+  qsort_s(non_leaders, non_leaders_size, sizeof(student*), compare_improvement, self);
+  // find mates
+  int m = 0;
+  int i = 0;
+  while (m < target_group_size - 1 && i < non_leaders_size) {
+    student* s = non_leaders[i++];
+    if (s->invite && !has_better_leader(s)) {
+      mates[m++] = s->pid;
+    }
+  }
+  if (m < target_group_size - 1) {
+    debug("Leader has only found %d mates instead of %d\n", m, target_group_size-1);
+  }
+  shm_stop_read();
 }
 
-bool has_better_leader(student* s);
-void invite();
-void wait_for_responses();
-void close_group();
+bool has_better_leader(student* s) {
+  bool found = FALSE;
+  // start looking from next leader
+  int i = leader_num + 1;
+  while (i < leaders_size && !found && leaders[i]->voto_AdE >= self->voto_AdE-3) {
+    if (improvement(self, s) < improvement(leaders[i], s))
+      found = TRUE;
+    i++;
+  }
+  return found;
+}
 
+void invite() {
+  debug("inviting\n");
+  for (int i = 0; i < target_group_size - 1;i++) {
+    msg_invite(mates[i]);
+  }
+}
 
-void non_leader_flow();
-void wait_for_invite();
+void wait_for_responses() {
+  msg m;
+  for (int i = 0; i < target_group_size - 1;i++) {
+    msg_receive(&m, TRUE);
+    debug("Response %d\n", i);
+    if (m.type != MSG_RESPONSE) {
+      debug("Message is not of type MSG_RESPONSE\n");
+    }
+  }
+}
+
+void close_group() {
+  msg_close_group(leader_num, mates, target_group_size);
+}
+
+void non_leader_flow() {
+  wait_for_invite();
+}
+
+void wait_for_invite() {
+  msg m;
+  msg_receive(&m, TRUE);
+  if (m.type != MSG_INVITE) {
+    debug("Expected invite\n");
+  }
+  msg_respond(m.from, TRUE);
+}

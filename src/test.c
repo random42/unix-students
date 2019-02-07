@@ -118,10 +118,11 @@ void test_shm() {
   shm_write_students(l);
   printf("3 students have been written\n\n");
   shm_print();
-  int pids[3];
-  pids[0] = 1;
-  pids[1] = 3;
-  shm_close_group(pids, 2);
+  group* g = new_group();
+  group_add_student(g, s);
+  group_add_student(g, s1);
+  group_add_student(g, s2);
+  shm_close_group(g);
   printf("First and third students closed groups\n\n");
   shm_print();
   shm_delete();

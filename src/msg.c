@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -13,7 +14,7 @@ int msg_id;
 int msg_size;
 
 void msg_send(msg* m, int flag) {
-  int r = msgsnd(&m, msg_size, flag);
+  int r = msgsnd(msg_id, &m, msg_size, flag);
   if (r == -1) {
     ERROR("msgsnd\n");
   }
@@ -27,7 +28,7 @@ void msg_init() {
   }
 }
 
-void msg_invite(int pid, student* self) {
+void msg_invite(int pid) {
   msg m;
   m.mtype = pid;
   m.from = getpid();
@@ -56,31 +57,22 @@ void msg_send_vote(student* s) {
 int msg_receive(msg* buffer, bool wait) {
   int flag = wait ? 0 : IPC_NOWAIT;
   int r = msgrcv(msg_id, buffer, msg_size, getpid(), flag);
-  if (r == -1) {
-    if (!wait && errno == ENOMSG)
+  if (r == -1 && !wait && errno == ENOMSG)
       return -1;
-    else {
-      ERROR("msgrcv\n");
-    }
+  else {
+    ERROR("msgrcv\n");
   }
   return 0;
 }
 
-void msg_group(int student) {
-  msg m;
-  m.mtype = getppid();
-  m.from = getpid();
-  m.type = MSG_GROUP;
-  m.data = student;
-  msg_send(&m, 0);
-}
-
-void msg_close_group(int leader_num) {
+void msg_close_group(int leader_num, int* mates, int elems) {
   msg m;
   m.mtype = getppid();
   m.from = getpid();
   m.type = MSG_CLOSE_GROUP;
   m.data = leader_num;
+  m.elems = elems;
+  memcpy(&m.mates, mates, sizeof(int) * (elems-1));
   msg_send(&m, 0);
 }
 

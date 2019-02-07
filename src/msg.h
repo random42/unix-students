@@ -8,7 +8,7 @@
 #include "conf.h"
 #include "student.h"
 
-typedef enum {MSG_INVITE,MSG_RESPONSE,MSG_VOTE,MSG_GROUP,MSG_CLOSE_GROUP} msg_t;
+typedef enum {MSG_INVITE,MSG_RESPONSE,MSG_VOTE,MSG_CLOSE_GROUP} msg_t;
 
 typedef struct {
   // pid of receiver
@@ -17,8 +17,16 @@ typedef struct {
   int from;
   // msg type
   msg_t type;
-  // depends on msg type
+  /*
+  MSG_RESPONSE: response
+  MSG_VOTE: vote
+  MSG_CLOSE_GROUP: leader_num
+  */
   int data;
+  // MSG_CLOSE_GROUP
+  int mates[3];
+  // group elems;
+  int elems;
 } msg;
 
 void msg_init();
@@ -26,8 +34,7 @@ void msg_invite(int pid);
 void msg_respond(int pid, bool response);
 void msg_send_vote(student* s);
 int msg_receive(msg* buffer, bool wait);
-void msg_group(int student);
-void msg_close_group(int leader_num);
+void msg_close_group(int leader_num, int* mates, int elems);
 void msg_close();
 
 #endif

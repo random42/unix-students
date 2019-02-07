@@ -24,7 +24,6 @@ struct timeval start_time;
 
 list* students;
 list* groups;
-list* closed_groups;
 
 int main(int argc, char* argv[]) {
   init();
@@ -32,6 +31,7 @@ int main(int argc, char* argv[]) {
 }
 
 void start() {
+  debug("MANAGER\n");
   // set start time
   gettimeofday(&start_time, NULL);
   setitimer(ITIMER_REAL, &timer, NULL);
@@ -56,7 +56,6 @@ void init() {
   // create students
   students = create_students(POP_SIZE);
   groups = new_list();
-  closed_groups = new_list();
   // set student executable path
   student_path = malloc(strlen(dir)+13);
   sprintf(student_path, "%s/bin/student", dir);
@@ -130,73 +129,33 @@ void spawn_student(student* s) {
 void wait_for_messages() {
   msg* m = malloc(sizeof(msg));
   while (1) {
-    msg_receive(msg_id, m, TRUE);
-    switch(m->type) {
-      case MSG_GROUP: {
-        on_group(m);
-        break;
-      }
-      case MSG_CLOSE_GROUP: {
-        on_close_group(m);
-        break;
-      }
-      default: {
-        ERROR("MANAGER: Wrong message type.\n");
-      }
+    msg_receive(m, TRUE);
+    if (m->type != MSG_CLOSE_GROUP) {
+      ERROR("MANAGER: Wrong message type.\n");
     }
+    close_group(m);
   }
 }
 
-void on_group(msg* m) {
-  debug("MSG_GROUP\n");
-  student* leader = get_student(m->from);
-  student* new = get_student(m->data);
-  group* g;
-  if (leader->group) {
-    g = leader->group;
-    if (g->leader != leader) {
-      ERROR("Sender is not the group leader. GROUP\n");
-    }
-    if (g->closed) {
-      ERROR("Group is already closed. GROUP\n");
-    }
-  }
-  else {
-    g = new_group();
-    group_add_student(g, leader);
-    g->leader = leader;
-    list_add(groups, g);
-  }
-  group_add_student(g, new);
-}
-
-void on_close_group(msg* m) {
+void close_group(msg* m) {
   debug("MSG_CLOSE_GROUP\n");
-  student* leader = get_student(m->from);
   int leader_num = m->data;
-  group* g = leader->group;
-  // if student is not in any group
-  if (!g) {
-    g = new_group();
-    group_add_student(g, leader);
-    g->leader = leader;
-
-  }
-  else if (g->leader != leader) {
-    ERROR("Sender is not the group leader. CLOSE_GROUP\n");
-  }
-  if (g->closed) {
-    ERROR("Group is already closed. CLOSE_GROUP\n");
+  group* g = new_group();
+  student* leader = get_student(m->from);
+  group_add_student(g, leader);
+  g->leader = leader;
+  for (int i = 0; i < m->elems - 1;i++) {
+    group_add_student(g, get_student(m->mates[i]));
   }
   g->closed = TRUE;
-  list_add(closed_groups, g);
+  list_add(groups, g);
   shm_close_group(g);
   // next leader turn to invite
   sem_op(sem_id, TURN_SEM, leader_num + 1, TRUE);
 }
 
 void end(int signal) {
-  debug("END\n");
+  debug("end\n");
   print_infos();
   wait_for_children();
   exit(EXIT_SUCCESS);
@@ -208,7 +167,7 @@ void set_votes() {
 
 // initialize ipc structures
 void ipc_init() {
-  sem_id = sem_create(SEM_KEY, 1);
+  sem_id = sem_create(SEM_KEY, 2);
   shm_create();
   msg_init();
 }
@@ -234,7 +193,6 @@ void print_infos() {
   printf("\nTempo trascorso: %lf\n", elapsed_time(&start_time));
   printf("Studenti: %d\n", students->length);
   printf("Gruppi: %d\n", groups->length);
-  printf("Gruppi chiusi: %d\n", closed_groups->length);
 }
 
 void print_votes() {

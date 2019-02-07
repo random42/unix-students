@@ -30,9 +30,10 @@ STUDENT = build/child.o \
 	build/group.o \
 	build/msg.o \
 	build/sem.o \
-	build/shm.o
+	build/shm.o \
+	build/sort.o
 
-all: dir test manager
+all: dir test manager student
 
 manager: $(MANAGER)
 	$(CC) -o bin/$@ $^
