@@ -16,7 +16,7 @@ typedef struct {
 
 
 student* new_student();
-int set_vote(student* s);
+int student_set_vote(student* s);
 void print_student(void* obj);
 // overall improvement if they stay in the same group
 int student_imp(student* a, student* b);

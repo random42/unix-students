@@ -97,13 +97,14 @@ void test_student() {
   print_group(g);
   printf("\nVotes: %u, %u, %u\n", s->vote, s1->vote, s2->vote);
   g->closed = TRUE;
-  set_vote(s);
-  set_vote(s1);
-  set_vote(s2);
+  student_set_vote(s);
+  student_set_vote(s1);
+  student_set_vote(s2);
   printf("\nClosed group votes: %u, %u, %u\n", s->vote, s1->vote, s2->vote);
 }
 
 void test_shm() {
+  shm_create();
   printf("\nSHARED MEMORY TEST\n");
   student* s = new_student();
   student* s1 = new_student();
@@ -115,7 +116,6 @@ void test_shm() {
   list_add(l, s);
   list_add(l, s1);
   list_add(l, s2);
-  shm_create(l->length);
   shm_write_students(l);
   printf("3 students have been written\n\n");
   shm_print();

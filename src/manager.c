@@ -76,19 +76,11 @@ void ipc_init() {
   msg_init();
 }
 
-
-student* get_student(int pid) {
-  node* n = students->first;
-  bool found = FALSE;
-  student* s;
-  while (n && !found) {
-    s = n->elem;
-    if (s && s->pid == pid) {
-      found = TRUE;
-    }
-    n = n->next;
-  }
-  return s;
+void ipc_close() {
+  debug_close();
+  sem_delete(sem_id);
+  msg_close();
+  shm_delete();
 }
 
 // set function to handle signals
@@ -150,39 +142,53 @@ void wait_for_messages() {
   }
 }
 
+// first pid is the leader
+group* make_group(int* pids, int size) {
+  node* n = students->first;
+  student* s;
+  group* g = new_group();
+  int found = 0;
+  while (n && found < size) {
+    s = n->elem;
+    for (int i = 0; i < size;i++) {
+      if (pids[i] == s->pid) {
+        group_add_student(g, s);
+        if (found == 0) {
+          g->leader = s;
+        }
+        found++;
+      }
+    }
+    n = n->next;
+  }
+  return g;
+}
+
 void close_group(msg* m) {
   debug("MSG_CLOSE_GROUP\n");
   int leader_num = m->data;
-  group* g = new_group();
-  student* leader = get_student(m->from);
-  group_add_student(g, leader);
-  g->leader = leader;
-  for (int i = 0; i < m->elems - 1;i++) {
-    group_add_student(g, get_student(m->mates[i]));
-  }
+  group* g = make_group(m->students, m->elems);
   g->closed = TRUE;
   list_add(groups, g);
   shm_close_group(g);
+  if (DEBUG) {
+    print_group(g);
+  }
   // next leader turn to invite
   sem_op(sem_id, TURN_SEM, leader_num + 1, TRUE);
 }
 
 void end(int signal) {
   debug("END\n");
-  print_infos();
+  // set votes
+  for_each(students, student_set_vote);
+  // send votes
+  for_each(students, msg_send_vote);
+  // wait for children to exit
   wait_for_children();
+  // print infos and exit
+  print_infos();
   exit(EXIT_SUCCESS);
-}
-
-void set_votes() {
-
-}
-
-void ipc_close() {
-  debug_close();
-  sem_delete(sem_id);
-  msg_close();
-  shm_delete();
 }
 
 double elapsed_time(struct timeval* from) {
@@ -196,16 +202,58 @@ double elapsed_time(struct timeval* from) {
   return now-start;
 }
 
+double print_ade_table() {
+  int num[13];
+  for (int i = 0; i < 13; i++)
+    num[i] = 0;
+  int sum = 0;
+  node* n = students->first;
+  while (n) {
+    student* s = n->elem;
+    num[s->voto_AdE - 18]++;
+    sum += s->voto_AdE;
+    n = n->next;
+  }
+  double avg = (double)sum / POP_SIZE;
+  printf("\nVoti di Architettura degli Elaboratori\n\n");
+  printf("Voto\t| Num studenti\n");
+  for (int i = 0; i < 13;i++) {
+    printf("%d\t| %d\n", i + 18, num[i]);
+  }
+  printf("\nVoto medio: %lf\n", avg);
+  return avg;
+}
+
+double print_so_table() {
+  int num[13];
+  for (int i = 0; i < 13; i++)
+    num[i] = 0;
+  int sum = 0;
+  node* n = students->first;
+  while (n) {
+    student* s = n->elem;
+    num[s->vote - 18]++;
+    sum += s->vote;
+    n = n->next;
+  }
+  double avg = (double)sum / POP_SIZE;
+  printf("\nVoti di Sistemi Operativi\n\n");
+  printf("Voto\t| Num studenti\n");
+  for (int i = 0; i < 13;i++) {
+    printf("%d\t| %d\n", i + 18, num[i]);
+  }
+  printf("\nVoto medio: %lf\n", avg);
+  return avg;
+}
+
 void print_infos() {
-  printf("\nTempo trascorso: %lf\n", elapsed_time(&start_time));
+  double ade = print_ade_table();
+  double so = print_so_table();
+  printf("\nMiglioramento medio: %lf\n", so - ade);
+  printf("Tempo trascorso: %lf\n", elapsed_time(&start_time));
   printf("Studenti: %d\n", students->length);
-  printf("Gruppi: %d\n", groups->length);
+  printf("Gruppi formati: %d\n", groups->length);
 }
-
-void print_votes() {
-
-}
-
 
 // wait for children to exit
 void wait_for_children() {

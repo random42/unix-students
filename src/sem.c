@@ -6,7 +6,7 @@
 #include <errno.h>
 
 int sem_get(int key) {
-  int id = semget(key, 0, 0600);
+  int id = semget(key, 0, 0);
   if (id == -1) {
     printf("sem_get\n");
   }

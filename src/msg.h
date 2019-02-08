@@ -24,8 +24,7 @@ typedef struct {
   */
   int data;
   // MSG_CLOSE_GROUP
-  int mates[3];
-  // group elems;
+  int students[4];
   int elems;
 } msg;
 

@@ -46,5 +46,5 @@ void print_group(void* obj) {
   print_student_num(g->leader);
   printf(",%sclosed: %s,%s", sep, g->closed ? "TRUE" : "FALSE",sep);
   printf("max_vote: %d", g->max_vote);
-  printf("\n}");
+  printf("\n}\n");
 }

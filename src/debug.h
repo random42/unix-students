@@ -8,8 +8,8 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define DEBUG 1
-#define DEBUG_ONCE DEBUG && 0
+#define DEBUG 0
+#define DEBUG_ONCE DEBUG && 1
 
 #define P debug_p()
 #define V debug_v()

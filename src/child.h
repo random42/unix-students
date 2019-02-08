@@ -21,7 +21,6 @@ void wait_for_vote();
 void leader_flow();
 void wait_turn();
 void choose_mates();
-bool has_better_leader(student* s);
 void invite();
 void wait_for_responses();
 void close_group();

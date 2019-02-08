@@ -19,16 +19,13 @@ void set_signal_handler(int signal, void (*f)(int), bool atomic);
 list* create_students(int num);
 void spawn_student(student* s);
 void wait_for_messages();
-student* get_student(int pid);
+group* make_group(int* pids, int size);
 void on_msg(msg* m);
 void close_group(msg* m);
 double elapsed_time();
 void ipc_close();
-void print_votes();
 void print_infos();
-void set_votes();
 void end();
-
 
 
 void wait_for_children();

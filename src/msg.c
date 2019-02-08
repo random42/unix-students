@@ -11,20 +11,20 @@
 #include "debug.h"
 
 
-static int id;
+static int msg_id;
 static int msg_size;
 
 void msg_send(msg* m, int flag) {
-  int r = msgsnd(id, m, msg_size, flag);
+  int r = msgsnd(msg_id, m, msg_size, flag);
   if (r == -1) {
     error("msgsnd\n");
   }
 }
 
 void msg_init() {
-  id = msgget(MSG_INVITE_KEY, IPC_CREAT | 0600);
+  msg_id = msgget(MSG_INVITE_KEY, IPC_CREAT | 0600);
   msg_size = sizeof(msg) - sizeof(long);
-  if (id == -1) {
+  if (msg_id == -1) {
     error("msg_init");
   }
 }
@@ -57,11 +57,13 @@ void msg_send_vote(student* s) {
 
 int msg_receive(msg* buffer, bool wait) {
   int flag = wait ? 0 : IPC_NOWAIT;
-  int r = msgrcv(id, buffer, msg_size, getpid(), flag);
-  if (r == -1 && !wait && errno == ENOMSG)
+  int r = msgrcv(msg_id, buffer, msg_size, getpid(), flag);
+  if (r == -1) {
+    if (!wait && errno == ENOMSG)
       return -1;
-  else {
-    error("msgrcv\n");
+    else {
+      error("msgrcv\n");
+    }
   }
   return 0;
 }
@@ -73,12 +75,13 @@ void msg_close_group(int leader_num, int* mates, int elems) {
   m.type = MSG_CLOSE_GROUP;
   m.data = leader_num;
   m.elems = elems;
-  memcpy(&m.mates, mates, sizeof(int) * (elems-1));
+  m.students[0] = m.from;
+  memcpy(&m.students[1], mates, sizeof(int) * (elems-1));
   msg_send(&m, 0);
 }
 
 void msg_close() {
-  int a = msgctl(id, IPC_RMID, NULL);
+  int a = msgctl(msg_id, IPC_RMID, NULL);
   if (a == -1) {
     debug("msgctl\n");
   }

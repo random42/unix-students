@@ -22,7 +22,7 @@ student* new_student() {
   return s;
 }
 
-int set_vote(student* s) {
+int student_set_vote(student* s) {
   if (!s->group || !s->group->closed)
     s->vote = 0;
   else if (s->group->size == s->nof_elems)

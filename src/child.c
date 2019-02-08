@@ -37,12 +37,6 @@ int leaders_size;
 student** non_leaders;
 int non_leaders_size;
 
-
-// inviti totali
-int invites;
-// rifiuti totali
-int rejections;
-
 // is self leader?
 bool leader;
 // mates' pid
@@ -164,7 +158,9 @@ void wait_for_vote() {
     error("Not MSG_VOTE\n");
   }
   self->vote = m.data;
-  printf("Student %d got from %d to %d\n", self->pid, self->voto_AdE, self->vote);
+  P;
+  printf("%d I got from %d to %d!\n", self->pid, self->voto_AdE, self->vote);
+  V;
   exit(EXIT_SUCCESS);
 }
 
@@ -199,41 +195,23 @@ void choose_mates() {
   int i = 0;
   while (m < target_group_size - 1 && i < non_leaders_size) {
     student* s = non_leaders[i++];
-    if (s->invite && !has_better_leader(s)) {
+    if (s->invite) {
       mates[m++] = s->pid;
     }
   }
   if (DEBUG) {
     P;
-    printf("MATES:\n[");
-    for (int i = 0; i < target_group_size - 1;i++) {
+    printf("MATES:[");
+    for (int i = 0; i < m;i++) {
       printf("%d ",mates[i]);
     }
     printf("]\n");
     V;
   }
   if (m < target_group_size - 1) {
-    debug("Leader has only found %d mates instead of %d\n", m, target_group_size-1);
+    debug("Not enough mates: %d, %d\n", m, target_group_size-1);
   }
   shm_stop_read();
-}
-
-bool has_better_leader(student* s) {
-  bool found = FALSE;
-  // start looking from next leader
-  int i = leader_num + 1;
-  while (i < leaders_size && !found && leaders[i]->voto_AdE > self->voto_AdE-3) {
-    if (student_imp(self, s) < student_imp(leaders[i], s)) {
-      found = TRUE;
-      if (DEBUG) {
-        P;
-        printf("%d has better leader %d\n", s->pid, leaders[i]->pid);
-        V;
-      }
-    }
-    i++;
-  }
-  return found;
 }
 
 void invite() {
@@ -256,7 +234,7 @@ void wait_for_responses() {
 }
 
 void close_group() {
-  debug("\nCLOSING GROUP\n");
+  debug("CLOSING GROUP\n");
   msg_close_group(leader_num, mates, target_group_size);
 }
 
