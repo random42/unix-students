@@ -1,4 +1,4 @@
-CC = gcc
+CC = gcc -w
 INCLUDES = src/*.h
 COMMON_DEPS = $(INCLUDES) makefile opt.conf
 
@@ -10,7 +10,8 @@ TEST = build/test.o \
 	build/group.o \
 	build/shm.o \
 	build/sem.o \
-	build/sort.o
+	build/sort.o \
+	build/debug.o
 
 MANAGER = build/manager.o \
 	build/list.o \
@@ -20,7 +21,8 @@ MANAGER = build/manager.o \
 	build/group.o \
 	build/msg.o \
 	build/sem.o \
-	build/shm.o
+	build/shm.o \
+	build/debug.o
 
 STUDENT = build/child.o \
 	build/list.o \
@@ -31,7 +33,8 @@ STUDENT = build/child.o \
 	build/msg.o \
 	build/sem.o \
 	build/shm.o \
-	build/sort.o
+	build/sort.o \
+	build/debug.o
 
 all: dir test manager student
 

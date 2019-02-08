@@ -8,23 +8,24 @@
 #include <sys/msg.h>
 #include "conf.h"
 #include "msg.h"
+#include "debug.h"
 
 
-int msg_id;
-int msg_size;
+static int id;
+static int msg_size;
 
 void msg_send(msg* m, int flag) {
-  int r = msgsnd(msg_id, &m, msg_size, flag);
+  int r = msgsnd(id, m, msg_size, flag);
   if (r == -1) {
-    ERROR("msgsnd\n");
+    error("msgsnd\n");
   }
 }
 
 void msg_init() {
-  msg_id = msgget(MSG_INVITE_KEY, IPC_CREAT | 0600);
+  id = msgget(MSG_INVITE_KEY, IPC_CREAT | 0600);
   msg_size = sizeof(msg) - sizeof(long);
-  if (msg_id == -1) {
-    ERROR("msg_init");
+  if (id == -1) {
+    error("msg_init");
   }
 }
 
@@ -56,11 +57,11 @@ void msg_send_vote(student* s) {
 
 int msg_receive(msg* buffer, bool wait) {
   int flag = wait ? 0 : IPC_NOWAIT;
-  int r = msgrcv(msg_id, buffer, msg_size, getpid(), flag);
+  int r = msgrcv(id, buffer, msg_size, getpid(), flag);
   if (r == -1 && !wait && errno == ENOMSG)
       return -1;
   else {
-    ERROR("msgrcv\n");
+    error("msgrcv\n");
   }
   return 0;
 }
@@ -77,7 +78,7 @@ void msg_close_group(int leader_num, int* mates, int elems) {
 }
 
 void msg_close() {
-  int a = msgctl(msg_id, IPC_RMID, NULL);
+  int a = msgctl(id, IPC_RMID, NULL);
   if (a == -1) {
     debug("msgctl\n");
   }

@@ -22,5 +22,7 @@ void print_student(void* obj);
 int student_imp(student* a, student* b);
 // compares a and b by improvement(a,self) and improvement(b,self);
 int student_imp_comp(void* a, void* b, void* self);
+int student_vote_comp(void* a, void* b);
+void student_print_array(student** a, int size);
 
 #endif

@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include "random.h"
+#include "debug.h"
+
+
 
 FILE* u_random;
 
@@ -9,7 +12,7 @@ FILE* u_random;
 void random_init() {
   u_random = fopen("/dev/urandom", "r");
   if (!u_random) {
-    ERROR("Cannot open /dev/urandom");
+    error("Cannot open /dev/urandom");
   }
 }
 

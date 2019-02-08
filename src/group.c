@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include "debug.h"
 #include "list.h"
 #include "group.h"
 #include "student.h"
@@ -17,7 +18,7 @@ group* new_group() {
 
 void group_add_student(group* g, student* s) {
   if (g->size == 4) {
-    ERROR("Adding student to group of 4 students.");
+    error("Adding student to group of 4 students.");
   }
   s->group = g;
   g->students[g->size++] = s;

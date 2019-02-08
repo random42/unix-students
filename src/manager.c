@@ -7,10 +7,10 @@
 #include <sys/time.h>
 #include <signal.h>
 #include "manager.h"
+#include "debug.h"
 
 extern int POP_SIZE;
 extern int SIM_TIME;
-extern int msg_id;
 
 // start semaphore
 int sem_id;
@@ -40,6 +40,7 @@ void start() {
   shm_write_students(students);
   // decrements the semaphore to let children start
   sem_op(sem_id, START_SEM, -POP_SIZE, TRUE);
+  debug("START\n\n");
   wait_for_messages();
 }
 
@@ -67,6 +68,15 @@ void init() {
   set_signal_handler(SIGTERM, end, TRUE);
 }
 
+// initialize ipc structures
+void ipc_init() {
+  debug_create(DEBUG_KEY);
+  sem_id = sem_create(SEM_KEY, 2);
+  shm_create();
+  msg_init();
+}
+
+
 student* get_student(int pid) {
   node* n = students->first;
   bool found = FALSE;
@@ -92,7 +102,7 @@ void set_signal_handler(int signal, void (*f)(int), bool atomic) {
     sigemptyset(&s.sa_mask);
   int r = sigaction(signal, &s, NULL);
   if (r == -1) {
-    ERROR("sigaction\n");
+    error("sigaction\n");
   }
 }
 
@@ -112,12 +122,15 @@ void spawn_student(student* s) {
   int child = fork();
   switch(child) {
     case -1: { // error
-      ERROR("fork\n");
+      error("fork\n");
       break;
     }
     case 0: { // child process
-      execl(student_path, "student", voto, nof_elems, NULL);
-      ERROR("execl\n");
+      int r = execl(student_path, "student", voto, nof_elems, NULL);
+      if (r == -1) {
+        debug("execl\n");
+      }
+      error("execl\n");
       break;
     }
     default: { // parent process
@@ -131,7 +144,7 @@ void wait_for_messages() {
   while (1) {
     msg_receive(m, TRUE);
     if (m->type != MSG_CLOSE_GROUP) {
-      ERROR("MANAGER: Wrong message type.\n");
+      error("MANAGER: Wrong message type.\n");
     }
     close_group(m);
   }
@@ -155,7 +168,7 @@ void close_group(msg* m) {
 }
 
 void end(int signal) {
-  debug("end\n");
+  debug("END\n");
   print_infos();
   wait_for_children();
   exit(EXIT_SUCCESS);
@@ -165,14 +178,8 @@ void set_votes() {
 
 }
 
-// initialize ipc structures
-void ipc_init() {
-  sem_id = sem_create(SEM_KEY, 2);
-  shm_create();
-  msg_init();
-}
-
 void ipc_close() {
+  debug_close();
   sem_delete(sem_id);
   msg_close();
   shm_delete();

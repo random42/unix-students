@@ -6,9 +6,6 @@
 
 // utils
 int min(int a, int b);
-int improvement(student* leader, student* s);
-int compare_vote(student** a, student** b, void* ctx);
-int compare_improvement(student** a, student** b, student** leader);
 
 // main
 void init();

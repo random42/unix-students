@@ -4,12 +4,11 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <errno.h>
-#include "conf.h"
 
 int sem_get(int key) {
-  int id = semget(key, 0, 0);
+  int id = semget(key, 0, 0600);
   if (id == -1) {
-    ERROR("sem_get\n");
+    printf("sem_get\n");
   }
   return id;
 }
@@ -17,7 +16,7 @@ int sem_get(int key) {
 int sem_create(int key, int n_sems) {
   int id = semget(key, n_sems, 0600 | IPC_CREAT);
   if (id == -1) {
-    ERROR("sem_create\n");
+    printf("sem_create\n");
   }
   return id;
 }
@@ -25,7 +24,7 @@ int sem_create(int key, int n_sems) {
 void sem_delete(int sem_id) {
   int r = semctl(sem_id, 0, IPC_RMID);
   if (r == -1) {
-    debug("sem_delete\n");
+    printf("sem_delete\n");
   }
 }
 
@@ -40,6 +39,6 @@ int sem_op(int sem_id, int sem_num, short op, int wait) {
 void sem_set(int sem_id, int sem_num, int val) {
   int r = semctl(sem_id, sem_num, SETVAL, val);
   if (r == -1) {
-    ERROR("sem_set\n");
+    printf("sem_set\n");
   }
 }

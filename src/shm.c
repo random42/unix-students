@@ -9,32 +9,34 @@
 #include "list.h"
 #include "student.h"
 #include "group.h"
+#include "debug.h"
+
 #define SHM_KEY 1234
 #define SHM_SEM_KEY 1253
 #define READ 0 // num of readers
 #define WRITE 1 // 0 if writing, 1 otherwise
 #define WRITE_WAIT 2 // number of writers waiting
 
+extern int POP_SIZE;
 void* shm_ptr;
 int shm_id;
 int shm_sem_id;
-extern int POP_SIZE;
+
 
 // used by manager
-void* shm_create() {
+void shm_create() {
   int size = (sizeof(student) * POP_SIZE);
   shm_id = shmget(SHM_KEY, size, 0600 | IPC_CREAT);
   if (shm_id == -1) {
-    ERROR("shmget\n");
+    error("shmget\n");
   }
   shm_ptr = shmat(shm_id, NULL, 0);
   if (shm_ptr == (void*)-1) {
-    ERROR("shmat\n");
+    error("shmat\n");
   }
   shm_sem_id = sem_create(SHM_SEM_KEY, 3);
   // writing lock is free at start
   sem_set(shm_sem_id, WRITE, 1);
-  return shm_ptr;
 }
 
 void shm_write_students(list* students) {
@@ -69,17 +71,16 @@ void shm_close_group(group* g) {
 }
 
 // used by students, so read-only permission is set
-void* shm_get() {
-  shm_id = shmget(SHM_KEY, 0, 0);
+void shm_get() {
+  shm_id = shmget(SHM_KEY, 0, 0600);
   if (shm_id == -1) {
-    ERROR("shmget\n");
+    error("shmget\n");
   }
-  void* shm_ptr = shmat(shm_id, NULL, SHM_RDONLY);
+  shm_ptr = shmat(shm_id, NULL, 0);
   if (shm_ptr == (void*)-1) {
-    ERROR("shmat\n");
+    error("shmat\n");
   }
   shm_sem_id = sem_get(SHM_SEM_KEY);
-  return shm_ptr;
 }
 
 void shm_read() {
@@ -119,12 +120,11 @@ void shm_delete() {
 }
 
 void shm_print() {
-  printf("\nSHARED MEMORY STATE\n\n");
   shm_read();
+  printf("\nSHARED MEMORY STATE\n\n");
   student* arr = (student*)shm_ptr;
   for (int i = 0; i < POP_SIZE; i++) {
-    student* x = &arr[i];
-    print_student(x);
+    print_student(&arr[i]);
     printf("\n");
   }
   shm_stop_read();

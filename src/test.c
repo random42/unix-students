@@ -9,6 +9,7 @@
 #include "group.h"
 #include "sort.h"
 #include "shm.h"
+#include "debug.h"
 
 extern double TWO;
 extern double THREE;
@@ -23,7 +24,7 @@ void print_int(void* a) {
 }
 
 void test_conf() {
-  //ERROR("Test error!\n");
+  //error("Test error!\n");
   config_init();
   printf("\n\nCONF TEST\n\n");
   printf("two: %lf, three: %lf, four: %lf, nof_invites: %d, max_reject: %d, pop_size: %d, sim_time: %d\n", TWO, THREE, FOUR, NOF_INVITES, MAX_REJECT, POP_SIZE, SIM_TIME);
@@ -143,6 +144,11 @@ void test_improvement_sort() {
   qsort_s(arr, length, sizeof(student*), student_imp_comp, self);
   for (int i = 0; i < length;i++) {
     printf("imp: %d, nof_elems uguale: %d, voto self: %d, voto: %d\n", student_imp(self, arr[i]), self->nof_elems == arr[i]->nof_elems, self->voto_AdE, arr[i]->voto_AdE);
+  }
+  qsort_s(arr, length, sizeof(student*), student_vote_comp, NULL);
+  printf("\nVOTE SORT\n\n");
+  for (int i = 0; i < length;i++) {
+    printf("%d\n", arr[i]->voto_AdE);
   }
 }
 
