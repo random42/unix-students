@@ -153,7 +153,7 @@ group* make_group(int* pids, int size) {
     for (int i = 0; i < size;i++) {
       if (pids[i] == s->pid) {
         group_add_student(g, s);
-        if (found == 0) {
+        if (i == 0) {
           g->leader = s;
         }
         found++;

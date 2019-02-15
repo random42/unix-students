@@ -2,8 +2,6 @@
 
 #define MSG_H
 #define MSG_INVITE_KEY 1234
-#define MSG_RESPONSE_KEY 12345
-#define MSG_MANAGER_KEY 543534
 
 #include "conf.h"
 #include "student.h"

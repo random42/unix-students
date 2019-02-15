@@ -1,6 +1,6 @@
 CC = gcc -w
 INCLUDES = src/*.h
-COMMON_DEPS = $(INCLUDES) makefile opt.conf
+COMMON_DEPS = $(INCLUDES) makefile
 
 TEST = build/test.o \
 	build/list.o \

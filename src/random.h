@@ -1,6 +1,5 @@
 #ifndef RANDOM_H
 #define RANDOM_H
-#include "conf.h"
 
 void random_init();
 int random_int();
