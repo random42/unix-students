@@ -1,5 +1,4 @@
 #ifndef CHILD_H
-
 #define CHILD_H
 
 #include "student.h"
@@ -15,7 +14,9 @@ void ipc_init();
 
 // compara studenti per voto e pid
 void divide_students();
+
 void wait_for_vote();
+int get_parity();
 
 // leader functions
 void leader_flow();

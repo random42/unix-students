@@ -13,7 +13,6 @@
 
 #define P debug_p()
 #define V debug_v()
-#define ONCE if (DEBUG_ONCE && getpid() % POP_SIZE == 0)
 #define debug(x, ...) if (DEBUG) {P;printf("%d ", getpid());printf(x, ##__VA_ARGS__);V;}
 #define error(x, ...) P;printf("\n%d ERROR\n", getpid());printf(x, ##__VA_ARGS__);printf("%s\n",strerror(errno));V;exit(EXIT_FAILURE);
 

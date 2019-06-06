@@ -16,6 +16,8 @@
 #include "child.h"
 #include "debug.h"
 
+#define ONCE if (DEBUG_ONCE && leader && leader_num == 0)
+
 extern int NOF_INVITES;
 extern int MAX_REJECT;
 extern int POP_SIZE;
@@ -29,7 +31,9 @@ int sem_id;
 // lo studente del processo
 student* self;
 
+// all students with same parity
 student** all;
+int all_size;
 
 student** leaders;
 int leaders_size;
@@ -48,6 +52,10 @@ int target_group_size;
 
 int min(int a, int b) {
   return a < b ? a : b;
+}
+
+int get_parity() {
+  return self->pid%2;
 }
 
 // main
@@ -94,27 +102,33 @@ void start() {
 // divide between leaders and non-leaders
 void divide_students() {
   shm_read();
+  int parity = get_parity();
   all = malloc(sizeof(student*) * POP_SIZE);
+  all_size = 0;
   leaders = all;
   student* s = (student*)shm_ptr;
   // copy addresses into array
   for (int i = 0; i < POP_SIZE;i++) {
-    all[i] = &s[i];
+    student* x = &s[i];
+    if (x->pid % 2 == parity) {
+      all[all_size++] = x;
+    }
   }
   // sort students by vote
-  qsort_s(all, POP_SIZE, sizeof(student*), student_vote_comp, NULL);
+  qsort_s(all, all_size, sizeof(student*), student_vote_comp, NULL);
   ONCE {
     P;
-    printf("\nALL\n");
-    student_print_array(all, POP_SIZE);
+    printf("\nParity = %d; ALL\n", parity);
+    student_print_array(all, all_size);
     printf("\n");
     V;
   }
   int total = 0;
   int i = 0;
   student* l = NULL;
-  // choose leaders among best votes until they fill POP_SIZE
-  while (total < POP_SIZE) {
+  // choose leaders among the best students (highest votes)
+  // until the sum of their group preferences covers all students
+  while (total < all_size) {
     l = all[i];
     int elems = min(l->nof_elems, NOF_INVITES + 1);
     total += elems;
@@ -129,26 +143,28 @@ void divide_students() {
   leaders_size = i;
   ONCE {
     P;
-    printf("\nLEADERS\n");
+    printf("\nParity = %d; LEADERS\n", parity);
     student_print_array(leaders, leaders_size);
     printf("\n");
     V;
   }
-  shm_stop_read();
-  // last leader has more elems than needed and self is last leader
-  if (leader && leader_num == leaders_size-1 && total > POP_SIZE) {
-    target_group_size -= (total - POP_SIZE);
-    debug("Last group size %d\n", target_group_size);
+
+  // if I am the last leader and the sum exceeds the number of students
+  // then reduce my number of mates
+  if (leader && leader_num == leaders_size-1 && total > all_size) {
+    target_group_size -= (total - all_size);
+    debug("Parity = %d; Last group size %d\n", parity, target_group_size);
   }
   non_leaders = &all[i];
-  non_leaders_size = POP_SIZE - leaders_size;
+  non_leaders_size = all_size - leaders_size;
   ONCE {
     P;
-    printf("\nNON LEADERS\n");
+    printf("\nParity = %d; NON LEADERS\n", parity);
     student_print_array(non_leaders, non_leaders_size);
     printf("\n");
     V;
   }
+  shm_stop_read();
 }
 
 void wait_for_vote() {
@@ -177,7 +193,8 @@ void wait_turn() {
   // aspetta che il semaforo abbia il suo numero di leader e lo manda a 0
   // dopo aver chiuso il gruppo il manager aumentera' il semaforo di leader_num + 1
   // cosi che il prossimo leader faccia il suo gruppo
-  sem_op(sem_id, TURN_SEM, -leader_num, TRUE);
+  int sem = get_parity() == 0 ? EVEN_TURN_SEM : ODD_TURN_SEM;
+  sem_op(sem_id, sem, -leader_num, TRUE);
 }
 
 void choose_mates() {
@@ -209,13 +226,13 @@ void choose_mates() {
     V;
   }
   if (m < target_group_size - 1) {
-    debug("Not enough mates: %d, %d\n", m, target_group_size-1);
+    error("Not enough mates: %d, %d\n", m, target_group_size-1);
   }
   shm_stop_read();
 }
 
 void invite() {
-  debug("INVITE\n");
+  debug("INVITING\n");
   for (int i = 0; i < target_group_size - 1;i++) {
     msg_invite(mates[i]);
   }

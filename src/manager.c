@@ -25,6 +25,8 @@ struct timeval start_time;
 list* students;
 list* groups;
 
+int first_leader_has_closed;
+
 int main(int argc, char* argv[]) {
   init();
   start();
@@ -32,15 +34,15 @@ int main(int argc, char* argv[]) {
 
 void start() {
   debug("MANAGER\n");
-  // set start time
-  gettimeofday(&start_time, NULL);
-  setitimer(ITIMER_REAL, &timer, NULL);
   for_each(students, spawn_student);
   // write students to shared memory
   shm_write_students(students);
+  // set start time
+  gettimeofday(&start_time, NULL);
+  setitimer(ITIMER_REAL, &timer, NULL);
+  debug("START\n\n");
   // decrements the semaphore to let children start
   sem_op(sem_id, START_SEM, -POP_SIZE, TRUE);
-  debug("START\n\n");
   wait_for_messages();
 }
 
@@ -71,7 +73,7 @@ void init() {
 // initialize ipc structures
 void ipc_init() {
   debug_create(DEBUG_KEY);
-  sem_id = sem_create(SEM_KEY, 2);
+  sem_id = sem_create(SEM_KEY, SEM_NUM);
   shm_create();
   msg_init();
 }
@@ -174,8 +176,10 @@ void close_group(msg* m) {
   if (DEBUG) {
     print_group(g);
   }
-  // next leader turn to invite
-  sem_op(sem_id, TURN_SEM, leader_num + 1, TRUE);
+  int sem = m->from % 2 == 0 ? EVEN_TURN_SEM : ODD_TURN_SEM;
+  // next leader's turn to invite
+  sem_op(sem_id, sem, leader_num + 1, TRUE);
+
 }
 
 void end(int signal) {
